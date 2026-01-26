@@ -7,7 +7,8 @@ app = FastAPI(title="QnA Chatbot API")
 
 app.add_middleware(
     CORSMiddleware,
-    allow_origins=["*"],  # dev mode
+    allow_origins=["*"],  # local 
+    # allow_origins=["http://192.168.80.143"],  # with host 
     allow_methods=["*"],
     allow_headers=["*"],
 )

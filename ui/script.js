@@ -56,7 +56,8 @@ function sendMessage(textFromSuggestion = null) {
   addMessage(text, "me");
   input.value = "";
 
-  fetch("http://127.0.0.1:8000/ask", {
+  fetch("http://127.0.0.1:8000/ask", { // # local
+  // fetch("http://192.168.80.143/chatbot/ask", { # with host 
     method: "POST",
     headers: {
       "Content-Type": "application/json",
