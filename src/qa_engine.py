@@ -1,22 +1,61 @@
+import paramiko
+# PATCH: tambahin DSSKey palsu biar sshtunnel ga error
+if not hasattr(paramiko, "DSSKey"):
+    paramiko.DSSKey = paramiko.RSAKey
+import re
+import sshtunnel
 import pandas as pd
 import numpy as np
+import mysql.connector as sql
 import os
-import re
-from datetime import datetime
+
+# from datetime import datetime
 from sentence_transformers import SentenceTransformer
 from sklearn.metrics.pairwise import cosine_similarity
 from sklearn.feature_extraction.text import TfidfVectorizer
+from dotenv import load_dotenv
+
+load_dotenv() #LOAD ENV
+
+def get_db_connection():
+#CONENCTION VIA SSH TUNNEL
+    tunnel = sshtunnel.SSHTunnelForwarder(
+        (os.getenv("SSH_HOST"), int(os.getenv("SSH_PORT"))),
+        ssh_username=os.getenv("SSH_USERNAME"),
+        ssh_password=os.getenv("SSH_PASSWORD"),
+        remote_bind_address=(os.getenv("DB_HOST"), int(os.getenv("DB_PORT"))),
+    ) 
+    tunnel.start() 
+    conn = sql.connect(
+        user=os.getenv("DB_USERNAME"),
+        password=os.getenv("DB_PASSWORD"),
+        host=os.getenv("DB_HOST"),
+        port=tunnel.local_bind_port,
+        database=os.getenv("DB_NAME"),
+        autocommit=True
+    )
+
+    return conn, tunnel
+# CONNECTION IF LOCAL
+# mydb = sql.connect(
+#   host="localhost",
+#   user="hesk",
+#   password="@S3cr3tDBp55n",
+#   database="hesk"
+# )
 
 # =========================
 # DATASET
 # =========================
-data = pd.read_excel("data/list-qna.xlsx")
-data.Pertanyaan = data.Pertanyaan.astype(str)
-data.Jawaban = data.Jawaban.astype(str)
+mydb, tunnel = get_db_connection()
 
-question = data.Pertanyaan.tolist()
-answer = data.Jawaban.tolist()
+data = pd.read_sql('SELECT * FROM hesk_chatbot_qna', con=mydb)
+# data = pd.read_excel("data/list-qna.xlsx") # EXCEL
+# data.Pertanyaan = data.Pertanyaan.astype(str)
+# data.Jawaban = data.Jawaban.astype(str)
 
+question = data["question"].tolist()
+answer = data["answer"].tolist()
 # =========================
 # TF-IDF (TOKEN IMPORTANCE)
 # =========================
@@ -43,21 +82,27 @@ def tokenize(text):
 # EMBEDDING MODEL
 # =========================
 model = SentenceTransformer("paraphrase-multilingual-MiniLM-L12-v2")
-
 question_embeddings = model.encode(question, normalize_embeddings=True)
 
 # =========================
 # UNKNOWN QUESTION MEMORY
 # =========================
-unknown_path = "data/unknown-questions.xlsx"
+unknown_data = pd.read_sql('SELECT * FROM hesk_chatbot_qna_unknown', con=mydb)
+mydb.close()
+tunnel.stop()
 
-if os.path.exists(unknown_path):
-    unknown_data = pd.read_excel(unknown_path)
-    unknown_data.question = unknown_data.question.astype(str)
-    u_question = unknown_data.question.tolist()
-else:
-    unknown_data = pd.DataFrame(columns=["question", "timestamp"])
-    u_question = []
+unknown_data["question"] = unknown_data["question"].astype(str)
+u_question = unknown_data["question"].tolist()
+
+### EXCEL ###
+# unknown_path = "data/unknown-questions.xlsx"
+# if os.path.exists(unknown_path):
+#     unknown_data = pd.read_excel(unknown_path)
+#     unknown_data.question = unknown_data.question.astype(str)
+#     u_question = unknown_data.question.tolist()
+# else:
+#     unknown_data = pd.DataFrame(columns=["question", "timestamp"])
+#     u_question = []
 
 unknown_embeddings = (
     model.encode(u_question, normalize_embeddings=True) if u_question else None
@@ -87,12 +132,39 @@ def save_unknown(q):
 
     if is_duplicate_unknown(q):
         return
+    
+    cursor = mydb.cursor()
 
-    new_row = {"question": q, "timestamp": datetime.now()}
+    sql = """
+        INSERT INTO hesk_chatbot_qna_unknown
+        (question, status, created_at, updated_at)
+        VALUES (%s, %s, NOW(), NOW())
+    """
 
-    unknown_data = pd.concat([unknown_data, pd.DataFrame([new_row])], ignore_index=True)
+    try:
+        cursor.execute(sql, (q, "new"))
+        new_id = cursor.lastrowid
+    except sql.errors.IntegrityError:
+        # duplicate di level DB
+        mydb.close()
+        tunnel.stop()
+        return
 
-    unknown_data.to_excel(unknown_path, index=False)
+    # Update dataframe in-memory
+    new_row = {
+        "id": new_id,
+        "question": q
+    }
+
+    unknown_data = pd.concat(
+        [unknown_data, pd.DataFrame([new_row])],
+        ignore_index=True
+    )
+
+    ### EXCEL
+    # new_row = {"question": q, "timestamp": datetime.now()}
+    # unknown_data = pd.concat([unknown_data, pd.DataFrame([new_row])], ignore_index=True)
+    # unknown_data.to_excel(unknown_path, index=False)
 
     u_question.append(q)
     unknown_embeddings = model.encode(u_question, normalize_embeddings=True)
