@@ -1,11 +1,9 @@
-require('dotenv').config(); 
-
 const input = document.querySelector(".textInput");
 const sendBtn = document.querySelector(".send-button");
 const messageList = document.querySelector(".message");
 const chatButton = document.getElementById("chatButton");
 const chatBox = document.getElementById("chatBox");
-const closeChat = document.getElementById("closeChat");
+const closeChat = document.getElementById("closeChat"); 
 
 document.querySelectorAll(".suggestions li").forEach((item) => {
   item.addEventListener("click", () => {
@@ -58,6 +56,7 @@ function sendMessage(textFromSuggestion = null) {
   addMessage(text, "me");
   input.value = "";
 
+  require('dotenv').config();
   fetch(process.env.LOCAL_SITE + process.env.LOCAL_API, { // # local
   // fetch(process.env.URL_SITE + process.env.URL_API, { # dev
     method: "POST",
