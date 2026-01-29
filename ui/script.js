@@ -1,3 +1,5 @@
+require('dotenv').config(); 
+
 const input = document.querySelector(".textInput");
 const sendBtn = document.querySelector(".send-button");
 const messageList = document.querySelector(".message");
@@ -56,8 +58,8 @@ function sendMessage(textFromSuggestion = null) {
   addMessage(text, "me");
   input.value = "";
 
-  fetch("http://127.0.0.1:8000/ask", { // # local
-  // fetch("http://192.168.80.143/chatbot/ask", { # with host 
+  fetch(process.env.LOCAL_SITE + process.env.LOCAL_API, { // # local
+  // fetch(process.env.URL_SITE + process.env.URL_API, { # dev
     method: "POST",
     headers: {
       "Content-Type": "application/json",
