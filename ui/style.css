@@ -192,7 +192,8 @@ ul.message li.me .message-content {
 
 .chat-body {
   height: calc(100% - 131px);
-  overflow: auto;
+  position: relative;
+  overflow-y: auto;
   border-inline: 1px solid rgba(0, 0, 0, 0.1);
 }
 

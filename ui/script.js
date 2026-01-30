@@ -4,6 +4,9 @@ const messageList = document.querySelector(".message");
 const chatButton = document.getElementById("chatButton");
 const chatBox = document.getElementById("chatBox");
 const closeChat = document.getElementById("closeChat"); 
+const chatBody = document.querySelector(".chat-body");
+const nearBottom = chatBody.scrollHeight - chatBody.scrollTop <= chatBody.clientHeight + 50;
+const scrollBtn = document.getElementById("scrollToBottomBtn");
 
 document.querySelectorAll(".suggestions li").forEach((item) => {
   item.addEventListener("click", () => {
@@ -41,7 +44,11 @@ function addMessage(text, sender = "me") {
     `;
 
   messageList.appendChild(li);
-  messageList.scrollTop = messageList.scrollHeight;
+
+  //SCROLL TO BOTTOM
+  if (nearBottom) {
+  chatBody.scrollTo({ top: chatBody.scrollHeight, behavior: "smooth" });
+  }
 }
 
 sendBtn.addEventListener("click", sendMessage);
