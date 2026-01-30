@@ -3,7 +3,6 @@ from fastapi import FastAPI
 from pydantic import BaseModel
 from src.qa_engine import get_answer
 from fastapi.middleware.cors import CORSMiddleware
-from dotenv import load_dotenv
 
 app = FastAPI(title="QnA Chatbot API")
 
@@ -14,7 +13,6 @@ app.add_middleware(
     allow_methods=["*"],
     allow_headers=["*"],
 )
-
 
 class QuestionRequest(BaseModel):
     question: str

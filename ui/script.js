@@ -56,8 +56,7 @@ function sendMessage(textFromSuggestion = null) {
   addMessage(text, "me");
   input.value = "";
 
-  require('dotenv').config();
-  fetch(process.env.LOCAL_SITE + process.env.LOCAL_API, { // # local
+  fetch("http://127.0.0.1:8000/ask", {
   // fetch(process.env.URL_SITE + process.env.URL_API, { # dev
     method: "POST",
     headers: {
