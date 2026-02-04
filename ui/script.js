@@ -3,9 +3,10 @@ const sendBtn = document.querySelector(".send-button");
 const messageList = document.querySelector(".message");
 const chatButton = document.getElementById("chatButton");
 const chatBox = document.getElementById("chatBox");
-const closeChat = document.getElementById("closeChat"); 
+const closeChat = document.getElementById("closeChat");
 const chatBody = document.querySelector(".chat-body");
-const nearBottom = chatBody.scrollHeight - chatBody.scrollTop <= chatBody.clientHeight + 50;
+const nearBottom =
+  chatBody.scrollHeight - chatBody.scrollTop <= chatBody.clientHeight + 50;
 const scrollBtn = document.getElementById("scrollToBottomBtn");
 
 document.querySelectorAll(".suggestions li").forEach((item) => {
@@ -22,6 +23,24 @@ closeChat.addEventListener("click", () => {
   chatBox.classList.add("hidden");
 });
 
+function linkify(text) {
+  if (!text) return "";
+
+  // Markdown link
+  text = text.replace(
+    /\[([^\]]+)\]\((https?:\/\/[^\s]+)\)/g,
+    `<a href="$2" target="_blank" rel="noopener noreferrer">$1</a>`,
+  );
+
+  // URL biasa
+  text = text.replace(
+    /(https?:\/\/[^\s]+)/g,
+    `<a href="$1" target="_blank" rel="noopener noreferrer">$1</a>`,
+  );
+
+  return text;
+}
+
 function addMessage(text, sender = "me") {
   if (!text) return;
 
@@ -36,19 +55,21 @@ function addMessage(text, sender = "me") {
   const content = document.createElement("div");
   content.className = "message-content";
 
-  li.innerHTML = `
-        ${avatar}
-        <div class="message-content">
-            <p>${text}</p>
-        </div>
-    `;
+  const p = document.createElement("p");
 
+  // 🔥 FIX UTAMA
+  if (text.includes("<a ")) {
+    p.innerHTML = text; // sudah HTML → langsung render
+  } else {
+    p.innerHTML = linkify(text); // masih teks → baru linkify
+  }
+
+  content.appendChild(p);
+  li.innerHTML = avatar;
+  li.appendChild(content);
   messageList.appendChild(li);
 
-  //SCROLL TO BOTTOM
-  if (nearBottom) {
   chatBody.scrollTo({ top: chatBody.scrollHeight, behavior: "smooth" });
-  }
 }
 
 sendBtn.addEventListener("click", sendMessage);
@@ -64,7 +85,7 @@ function sendMessage(textFromSuggestion = null) {
   input.value = "";
 
   fetch("http://127.0.0.1:8000/ask", {
-  // fetch(process.env.URL_SITE + process.env.URL_API, { # dev
+    // fetch(process.env.URL_SITE + process.env.URL_API, { # dev
     method: "POST",
     headers: {
       "Content-Type": "application/json",
@@ -83,6 +104,22 @@ function sendMessage(textFromSuggestion = null) {
       }
     })
     .catch(() => {
-      addMessage("Server error ❎", "sender");
+      //  addMessage("Server error ❎", "sender");
+
+      // #. Example for parsing with link
+      const data = {
+        text_content: "Klik di sini",
+        link_url: "https://google.com",
+      };
+
+      let output;
+
+      if (text.toLowerCase() === "hai") {
+        output = `<a href="${data.link_url}" target="_blank">${data.text_content}</a>`;
+      } else {
+        output = data.text_content; // ❗ TANPA link
+      }
+
+      addMessage(output, "sender");
     });
 }
