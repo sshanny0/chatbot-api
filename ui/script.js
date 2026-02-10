@@ -23,25 +23,7 @@ closeChat.addEventListener("click", () => {
   chatBox.classList.add("hidden");
 });
 
-function linkify(text) {
-  if (!text) return "";
-
-  // Markdown link
-  text = text.replace(
-    /\[([^\]]+)\]\((https?:\/\/[^\s]+)\)/g,
-    `<a href="$2" target="_blank" rel="noopener noreferrer">$1</a>`,
-  );
-
-  // URL biasa
-  text = text.replace(
-    /(https?:\/\/[^\s]+)/g,
-    `<a href="$1" target="_blank" rel="noopener noreferrer">$1</a>`,
-  );
-
-  return text;
-}
-
-function addMessage(text, sender = "me") {
+function addMessage(text, sender = "me", link = null, tag = null) {
   if (!text) return;
 
   const li = document.createElement("li");
@@ -52,24 +34,22 @@ function addMessage(text, sender = "me") {
       ? `<img src="../img/icon-helpdesk.png" alt="icon-message">`
       : "";
 
-  const content = document.createElement("div");
-  content.className = "message-content";
+  li.innerHTML = `
+    ${avatar}
+    <div class="message-content">
+      <p>
+      ${text}
+      ${link ? `<a href="${link}" target="_blank">${tag}</a>` : ""}
+      </p>
+    </div>
+  `;
 
-  const p = document.createElement("p");
-
-  // 🔥 FIX UTAMA
-  if (text.includes("<a ")) {
-    p.innerHTML = text; // sudah HTML → langsung render
-  } else {
-    p.innerHTML = linkify(text); // masih teks → baru linkify
-  }
-
-  content.appendChild(p);
-  li.innerHTML = avatar;
-  li.appendChild(content);
   messageList.appendChild(li);
 
+    //SCROLL TO BOTTOM
+  if (nearBottom) {
   chatBody.scrollTo({ top: chatBody.scrollHeight, behavior: "smooth" });
+  }
 }
 
 sendBtn.addEventListener("click", sendMessage);
@@ -95,7 +75,12 @@ function sendMessage(textFromSuggestion = null) {
     .then((res) => res.json())
     .then((data) => {
       if (data.Jawaban) {
-        addMessage(data.Jawaban, "sender");
+        addMessage(
+          data.Jawaban,
+          "sender",
+          data.Link?.url,
+          data.Link?.tag
+        );
       } else {
         addMessage(
           "Mohon maaf saya belum yakin dengan jawaban saya 🙏 Silakan hubungi Helpdesk TI ",
@@ -104,22 +89,6 @@ function sendMessage(textFromSuggestion = null) {
       }
     })
     .catch(() => {
-      //  addMessage("Server error ❎", "sender");
-
-      // #. Example for parsing with link
-      const data = {
-        text_content: "Klik di sini",
-        link_url: "https://google.com",
-      };
-
-      let output;
-
-      if (text.toLowerCase() === "hai") {
-        output = `<a href="${data.link_url}" target="_blank">${data.text_content}</a>`;
-      } else {
-        output = data.text_content; // ❗ TANPA link
-      }
-
-      addMessage(output, "sender");
+       addMessage("Server error ❎", "sender");
     });
 }
