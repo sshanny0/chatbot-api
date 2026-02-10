@@ -148,7 +148,7 @@ def save_unknown(q):
     sql = """
         INSERT INTO hesk_chatbot_qna_unknown
         (question, status, created_at, updated_at)
-        VALUES (%s, %s, NOW(), NOW())
+        VALUES (:question, :status, NOW(), NOW())
     """
 
     try:
@@ -229,7 +229,7 @@ def missing_user_token_penalty(user_q, cand_q, max_penalty=0.7):
 # =========================
 # MAIN FUNCTION
 # =========================
-def get_answer(user_question, suggest_top=2):
+def get_answer(user_question):
     user_vec = model.encode(user_question, normalize_embeddings=True)
 
     raw_scores = cosine_similarity([user_vec], question_embeddings)[0]
@@ -251,36 +251,25 @@ def get_answer(user_question, suggest_top=2):
 
     best_idx = final_scores.argmax()
     best_score = final_scores[best_idx]
+    best_base_score = raw_scores[best_idx]
 
     # =========================
     # DECISION LOGIC
     # =========================
-    if best_score >= 0.75:
+    if best_base_score >= 0.6:
         return {
             "Status": "known",
             "Pertanyaan": question[best_idx],
             "Jawaban": answer[best_idx],
-            "Skor": round(float(best_score), 3),
+            "Link": {"url": hyperlink[best_idx], "tag": tag[best_idx]},
+            "Skor": {
+                "base": round(float(best_base_score), 3),
+                "final": round(float(best_score), 3),
+            },
         }
 
-    elif 0.5 <= best_score < 0.75:
-        save_unknown(user_question)
-
-        top_indices = final_scores.argsort()[-suggest_top:][::-1]
-
-        return {
-            "Status": "unknown",
-            "Message": "Saya mungkin dapat menemukan jawaban yang relevan:",
-            "Saran": [
-                {
-                    "Pertanyaan": question[i],
-                    "Jawaban": answer[i],
-                    "Skor": round(float(final_scores[i]), 3),
-                }
-                for i in top_indices
-            ],
-        }
-
+    # 2. TOPIK BARU (tidak ada yang mendekati)
+    #
     else:
         save_unknown(user_question)
         return {
