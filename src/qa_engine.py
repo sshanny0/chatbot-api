@@ -1,41 +1,46 @@
 import paramiko
+
 # PATCH: tambahin DSSKey palsu biar sshtunnel ga error
 if not hasattr(paramiko, "DSSKey"):
     paramiko.DSSKey = paramiko.RSAKey
-import re
-import sshtunnel
-import pandas as pd
-import numpy as np
-import mysql.connector as sql
 import os
+import re
+
+import mysql.connector as sql
+import numpy as np
+import pandas as pd
+import sshtunnel
+from dotenv import load_dotenv
 
 # from datetime import datetime
 from sentence_transformers import SentenceTransformer
-from sklearn.metrics.pairwise import cosine_similarity
 from sklearn.feature_extraction.text import TfidfVectorizer
-from dotenv import load_dotenv
+from sklearn.metrics.pairwise import cosine_similarity
 
-load_dotenv() #LOAD ENV
+load_dotenv()  # LOAD ENV
+
 
 def get_db_connection():
-#CONENCTION VIA SSH TUNNEL
+    # CONENCTION VIA SSH TUNNEL
     tunnel = sshtunnel.SSHTunnelForwarder(
         (os.getenv("SSH_HOST"), int(os.getenv("SSH_PORT"))),
         ssh_username=os.getenv("SSH_USERNAME"),
         ssh_password=os.getenv("SSH_PASSWORD"),
         remote_bind_address=(os.getenv("DB_HOST"), int(os.getenv("DB_PORT"))),
-    ) 
-    tunnel.start() 
+    )
+    tunnel.start()
     conn = sql.connect(
         user=os.getenv("DB_USERNAME"),
         password=os.getenv("DB_PASSWORD"),
         host=os.getenv("DB_HOST"),
         port=tunnel.local_bind_port,
         database=os.getenv("DB_NAME"),
-        autocommit=True
+        autocommit=True,
     )
 
     return conn, tunnel
+
+
 # CONNECTION IF LOCAL
 # mydb = sql.connect(
 #   host="localhost",
@@ -49,13 +54,18 @@ def get_db_connection():
 # =========================
 mydb, tunnel = get_db_connection()
 
-data = pd.read_sql('SELECT * FROM hesk_chatbot_qna', con=mydb)
+data = pd.read_sql(
+    "SELECT a.question AS question, a.answer AS answer, b.hyperlink AS hyperlink, b.tag AS tag FROM hesk_chatbot_qna a LEFT JOIN hesk_chatbot_link b ON a.id = b.qna",
+    con=mydb,
+)
 # data = pd.read_excel("data/list-qna.xlsx") # EXCEL
 # data.Pertanyaan = data.Pertanyaan.astype(str)
 # data.Jawaban = data.Jawaban.astype(str)
 
 question = data["question"].tolist()
 answer = data["answer"].tolist()
+hyperlink = data["hyperlink"].tolist()
+tag = data["tag"].tolist()
 # =========================
 # TF-IDF (TOKEN IMPORTANCE)
 # =========================
@@ -87,7 +97,7 @@ question_embeddings = model.encode(question, normalize_embeddings=True)
 # =========================
 # UNKNOWN QUESTION MEMORY
 # =========================
-unknown_data = pd.read_sql('SELECT * FROM hesk_chatbot_qna_unknown', con=mydb)
+unknown_data = pd.read_sql("SELECT * FROM hesk_chatbot_qna_unknown", con=mydb)
 mydb.close()
 tunnel.stop()
 
@@ -132,7 +142,7 @@ def save_unknown(q):
 
     if is_duplicate_unknown(q):
         return
-    
+
     cursor = mydb.cursor()
 
     sql = """
@@ -151,15 +161,9 @@ def save_unknown(q):
         return
 
     # Update dataframe in-memory
-    new_row = {
-        "id": new_id,
-        "question": q
-    }
+    new_row = {"id": new_id, "question": q}
 
-    unknown_data = pd.concat(
-        [unknown_data, pd.DataFrame([new_row])],
-        ignore_index=True
-    )
+    unknown_data = pd.concat([unknown_data, pd.DataFrame([new_row])], ignore_index=True)
 
     ### EXCEL
     # new_row = {"question": q, "timestamp": datetime.now()}
