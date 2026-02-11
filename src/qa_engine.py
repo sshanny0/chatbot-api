@@ -1,45 +1,14 @@
-import paramiko
-
-# PATCH: tambahin DSSKey palsu biar sshtunnel ga error
-if not hasattr(paramiko, "DSSKey"):
-    paramiko.DSSKey = paramiko.RSAKey
-import os
 import re
 
-import mysql.connector as sql
 import numpy as np
 import pandas as pd
-import sshtunnel
-from dotenv import load_dotenv
 
 # from datetime import datetime
 from sentence_transformers import SentenceTransformer
 from sklearn.feature_extraction.text import TfidfVectorizer
 from sklearn.metrics.pairwise import cosine_similarity
 
-load_dotenv()  # LOAD ENV
-
-
-def get_db_connection():
-    # CONENCTION VIA SSH TUNNEL
-    tunnel = sshtunnel.SSHTunnelForwarder(
-        (os.getenv("SSH_HOST"), int(os.getenv("SSH_PORT"))),
-        ssh_username=os.getenv("SSH_USERNAME"),
-        ssh_password=os.getenv("SSH_PASSWORD"),
-        remote_bind_address=(os.getenv("DB_HOST"), int(os.getenv("DB_PORT"))),
-    )
-    tunnel.start()
-    conn = sql.connect(
-        user=os.getenv("DB_USERNAME"),
-        password=os.getenv("DB_PASSWORD"),
-        host=os.getenv("DB_HOST"),
-        port=tunnel.local_bind_port,
-        database=os.getenv("DB_NAME"),
-        autocommit=True,
-    )
-
-    return conn, tunnel
-
+from database.connection import get_db_connection
 
 # CONNECTION IF LOCAL
 # mydb = sql.connect(
@@ -55,13 +24,14 @@ def get_db_connection():
 mydb, tunnel = get_db_connection()
 
 data = pd.read_sql(
-    "SELECT a.question AS question, a.answer AS answer, b.hyperlink AS hyperlink, b.tag AS tag FROM hesk_chatbot_qna a LEFT JOIN hesk_chatbot_link b ON a.id = b.qna",
+    "SELECT a.id AS id, a.question AS question, a.answer AS answer, b.hyperlink AS hyperlink, b.tag AS tag FROM hesk_chatbot_qna a LEFT JOIN hesk_chatbot_link b ON a.id = b.qna",
     con=mydb,
 )
 # data = pd.read_excel("data/list-qna.xlsx") # EXCEL
 # data.Pertanyaan = data.Pertanyaan.astype(str)
 # data.Jawaban = data.Jawaban.astype(str)
 
+id = data["id"].tolist()
 question = data["question"].tolist()
 answer = data["answer"].tolist()
 hyperlink = data["hyperlink"].tolist()
@@ -98,8 +68,6 @@ question_embeddings = model.encode(question, normalize_embeddings=True)
 # UNKNOWN QUESTION MEMORY
 # =========================
 unknown_data = pd.read_sql("SELECT * FROM hesk_chatbot_qna_unknown", con=mydb)
-mydb.close()
-tunnel.stop()
 
 unknown_data["question"] = unknown_data["question"].astype(str)
 u_question = unknown_data["question"].tolist()
@@ -173,6 +141,10 @@ def save_unknown(q):
     u_question.append(q)
     unknown_embeddings = model.encode(u_question, normalize_embeddings=True)
 
+    cursor.close()
+    mydb.close()
+    tunnel.stop()
+
 
 # =========================
 # SCORING FUNCTIONS
@@ -229,7 +201,7 @@ def missing_user_token_penalty(user_q, cand_q, max_penalty=0.7):
 # =========================
 # MAIN FUNCTION
 # =========================
-def get_answer(user_question):
+def get_answer(user_question, testing=False):
     user_vec = model.encode(user_question, normalize_embeddings=True)
 
     raw_scores = cosine_similarity([user_vec], question_embeddings)[0]
@@ -259,6 +231,7 @@ def get_answer(user_question):
     if best_base_score >= 0.6:
         return {
             "Status": "known",
+            "ID": id[best_idx],
             "Pertanyaan": question[best_idx],
             "Jawaban": answer[best_idx],
             "Link": {"url": hyperlink[best_idx], "tag": tag[best_idx]},
@@ -271,7 +244,8 @@ def get_answer(user_question):
     # 2. TOPIK BARU (tidak ada yang mendekati)
     #
     else:
-        save_unknown(user_question)
+        if not testing:
+            save_unknown(user_question)
         return {
             "Status": "unknown",
             "Message": "Mohon maaf saya belum yakin dengan jawaban saya, silakan hubungi Helpdesk TI",
