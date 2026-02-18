@@ -9,12 +9,6 @@ const nearBottom =
   chatBody.scrollHeight - chatBody.scrollTop <= chatBody.clientHeight + 50;
 const scrollBtn = document.getElementById("scrollToBottomBtn");
 
-document.querySelectorAll(".suggestions li").forEach((item) => {
-  item.addEventListener("click", () => {
-    sendMessage(item.innerText);
-  });
-});
-
 chatButton.addEventListener("click", () => {
   chatBox.classList.toggle("hidden");
 });
@@ -91,4 +85,91 @@ function sendMessage(textFromSuggestion = null) {
     .catch(() => {
        addMessage("Server error ❎", "sender");
     });
+}
+
+// grouping by category for quick replies
+function loadCategory(keyword) {
+
+  fetch(`http://127.0.0.1:8000/category/${encodeURIComponent(keyword)}`)
+    .then(res => res.json())
+    .then(data => {
+
+      if (data.Status === "category") {
+          renderCards(data.Data);
+      }
+
+    });
+
+}
+
+function renderCards(data) {
+
+  const container = document.querySelector(".quick-replies");
+  container.innerHTML = "";
+
+  let cardsHTML = `
+    <div class="card-slider">
+      <div class="card-wrapper">
+  `;
+
+  data.forEach(item => {
+
+    const hasLink = item.link && item.link.url && item.link.tag;
+
+    cardsHTML += `
+      <div class="bot-card">
+        <strong>${item.question}</strong>
+        <p>
+          ${item.answer}
+          ${
+            hasLink
+              ? `<a href="${item.link.url}" target="_blank">${item.link.tag}</a>`
+              : ""
+          }
+        </p>
+      </div>
+    `;
+  });
+
+  cardsHTML += `
+      </div>
+
+      <div class="card-nav">
+        <button class="prev">‹</button>
+        <button class="next">›</button>
+      </div>
+    </div>
+  `;
+
+  container.innerHTML = cardsHTML;
+
+  initSlider();
+}
+
+
+function initSlider() {
+
+  const slider = document.querySelector(".card-slider");
+  const wrapper = slider.querySelector(".card-wrapper");
+  const cards = slider.querySelectorAll(".bot-card");
+
+  let index = 0;
+
+  function update() {
+    wrapper.style.transform = `translateX(-${index * 100}%)`;
+  }
+
+  slider.querySelector(".next").onclick = () => {
+    if (index < cards.length - 1) {
+      index++;
+      update();
+    }
+  };
+
+  slider.querySelector(".prev").onclick = () => {
+    if (index > 0) {
+      index--;
+      update();
+    }
+  };
 }
