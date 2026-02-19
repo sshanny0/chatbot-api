@@ -30,10 +30,11 @@
 					<li class="sender">
 						<img src="../img/icon-helpdesk.png" alt="icon-message">
 						<div class="message-content">
-							<p>Halo, silahkan beritahu saya apabila Anda memiliki pertanyaan atau membutuhkan bantuan.</p>
+							<p>Halo, silahkan beritahu saya apabila Anda memiliki pertanyaan atau membutuhkan bantuan.
+							</p>
 						</div>
 					</li>
-										<li class="sender">
+					<li class="sender">
 						<img src="../img/icon-helpdesk.png" alt="icon-message">
 						<div class="message-content">
 							<p>Pilih salah satu topik dibawah ini, atau ketik pertanyaan Anda!</p>
@@ -41,18 +42,18 @@
 					</li>
 				</ul>
 
-				                    <div class="quick-replies">
-                        <button onclick="loadCategory('Helpdesk')">Getting Started</button>
-                        <button onclick="loadCategory('Layanan Permintaan Link Zoom')">Zoom</button>
-                        <button onclick="loadCategory('Layanan Aplikasi Master')">MASTER</button>
-                        <button onclick="loadCategory('Layanan Aplikasi Kapten')">KAPTEN</button>
-                        <button onclick="loadCategory('Layanan Aplikasi LMS')">LMS</button>
-                        <button onclick="loadCategory('Layanan Aplikasi Drive')">Drive</button>
-                        <button onclick="loadCategory('Layanan Email')">Email</button>
-                        <button onclick="loadCategory('Layanan Koneksi Internet')">Network</button>
-                        <button onclick="loadCategory('Layanan Anti Virus SentinelOne')">Antivirus</button>
-                        <button onclick="loadCategory('Layanan Akun')">Single Sign-On (SSO)</button>
-                    </div>
+				<div class="quick-replies">
+					<button onclick="loadCategory('Helpdesk')">Getting Started</button>
+					<button onclick="loadCategory('Layanan Permintaan Link Zoom')">Zoom</button>
+					<button onclick="loadCategory('Layanan Aplikasi Master')">MASTER</button>
+					<button onclick="loadCategory('Layanan Aplikasi Kapten')">KAPTEN</button>
+					<button onclick="loadCategory('Layanan Aplikasi LMS')">LMS</button>
+					<button onclick="loadCategory('Layanan Aplikasi Drive')">Drive</button>
+					<button onclick="loadCategory('Layanan Email')">Email</button>
+					<button onclick="loadCategory('Layanan Koneksi Internet')">Network</button>
+					<button onclick="loadCategory('Layanan Anti Virus SentinelOne')">Antivirus</button>
+					<button onclick="loadCategory('Layanan Akun')">Single Sign-On (SSO)</button>
+				</div>
 			</div>
 
 			<div class="chat-footer">

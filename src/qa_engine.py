@@ -24,14 +24,17 @@ from database.connection import get_db_connection
 mydb, tunnel = get_db_connection()
 
 data = pd.read_sql(
-    "SELECT a.id AS id, a.question AS question, a.answer AS answer, b.hyperlink AS hyperlink, b.tag AS tag FROM hesk_chatbot_qna a LEFT JOIN hesk_chatbot_link b ON a.id = b.qna",
+    "SELECT a.keyword AS keyword, a.question AS question, a.answer AS answer, b.hyperlink AS hyperlink, b.tag AS tag "
+    "FROM hesk_chatbot_qna a "
+    "LEFT JOIN hesk_chatbot_link b "
+    "ON a.id = b.qna",
     con=mydb,
 )
 # data = pd.read_excel("data/list-qna.xlsx") # EXCEL
 # data.Pertanyaan = data.Pertanyaan.astype(str)
 # data.Jawaban = data.Jawaban.astype(str)
 
-id = data["id"].tolist()
+keyword = data["keyword"].tolist()
 question = data["question"].tolist()
 answer = data["answer"].tolist()
 hyperlink = data["hyperlink"].tolist()
@@ -231,7 +234,6 @@ def get_answer(user_question, testing=False):
     if best_base_score >= 0.6:
         return {
             "Status": "known",
-            "ID": id[best_idx],
             "Pertanyaan": question[best_idx],
             "Jawaban": answer[best_idx],
             "Link": {"url": hyperlink[best_idx], "tag": tag[best_idx]},
@@ -251,3 +253,24 @@ def get_answer(user_question, testing=False):
             "Message": "Mohon maaf saya belum yakin dengan jawaban saya, silakan hubungi Helpdesk TI",
             "Skor": round(float(best_score), 3),
         }
+
+
+# Filter berdasarkan keyword
+def get_by_keyword(selected_keyword: str):
+
+    results = []
+
+    for i, k in enumerate(keyword):
+        if k.lower() == selected_keyword.lower():
+            results.append(
+                {
+                    "question": question[i],
+                    "answer": answer[i],
+                    "link": {"url": hyperlink[i], "tag": tag[i]},
+                }
+            )
+
+    if not results:
+        return {"Status": "empty", "Message": "Kategori tidak ditemukan"}
+
+    return {"Status": "category", "Keyword": selected_keyword, "Data": results}
