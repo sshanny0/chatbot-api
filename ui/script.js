@@ -58,7 +58,7 @@ function sendMessage(textFromSuggestion = null) {
   addMessage(text, "me");
   input.value = "";
 
-  fetch("http://127.0.0.1:8000/ask", {
+  fetch("http://127.0.0.1:8000/chatbot/ask", {
     // fetch(process.env.URL_SITE + process.env.URL_API, { # dev
     method: "POST",
     headers: {
@@ -90,7 +90,7 @@ function sendMessage(textFromSuggestion = null) {
 // grouping by category for quick replies
 function loadCategory(keyword) {
 
-  fetch(`http://127.0.0.1:8000/category/${encodeURIComponent(keyword)}`)
+  fetch(`http://127.0.0.1:8000/chatbot/category/${encodeURIComponent(keyword)}`)
     .then(res => res.json())
     .then(data => {
 
