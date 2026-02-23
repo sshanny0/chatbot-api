@@ -199,7 +199,7 @@ addForm.addEventListener("submit", async function(e) {
     status: document.getElementById("newStatus").value
   };
 
-  await fetch("/api/qna", {
+  await fetch("http://localhost:8000/crud/add", {
     method: "POST",
     headers: {
       "Content-Type": "application/json"
@@ -210,5 +210,5 @@ addForm.addEventListener("submit", async function(e) {
   addModal.style.display = "none";
   addForm.reset();
 
-  loadData(currentPage); // reload page sekarang
+  loadData(currentPage); 
 });
