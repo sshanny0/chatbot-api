@@ -1,3 +1,4 @@
+const tableBody = document.getElementById("tableBody");
 const addItemBtn = document.getElementById("addItemBtn");
 const addRowBtn = document.getElementById("addRowBtn");
 const addModal = document.getElementById("addModal");
@@ -7,6 +8,7 @@ const addForm = document.getElementById("addForm");
 let currentPage = 1;
 let limit = 10;
 let selectedRows = new Set();
+let tableData = [];
 
 document.addEventListener("DOMContentLoaded", function () {
   loadData();
@@ -23,7 +25,9 @@ async function loadData(page = 1) {
     ); // pastikan endpoint benar
     const result = await response.json();
 
-    renderTable(result.data);
+    tableData = result.data; 
+
+    renderTable(tableData);
     renderPagination(result.total, result.page);
   } catch (error) {
     console.error("Error fetching data:", error);
@@ -169,10 +173,90 @@ function renderPagination(total, currentPage) {
   pagination.appendChild(nextBtn);
 }
 
+function updateRow(id, updatedData) {
+  id = Number(id);
 
-// MODAL BUTTON
-addRowBtn.addEventListener("click", () => {
+  const index = tableData.findIndex((row) => row.id === id);
+
+  if (index !== -1) {
+    tableData[index] = { ...tableData[index], ...updatedData };
+    renderTable(tableData);
+  }
+}
+// Delete row by ID
+function deleteRow(id) {
+  tableData = tableData.filter((row) => row.id !== id);
+  selectedRows.delete(id);
+  renderTable();
+}
+
+// Delete selected rows
+function deleteSelectedRows() {
+  if (selectedRows.size === 0) return;
+
+  if (
+    confirm(
+      `Are you sure you want to delete ${selectedRows.size} selected row(s)?`,
+    )
+  ) {
+    tableData = tableData.filter((row) => !selectedRows.has(row.id));
+    selectedRows.clear();
+    renderTable();
+  }
+}
+
+// Search functionality
+function searchTable(query) {
+  if (!query.trim()) {
+    renderTable();
+    return;
+  }
+
+  const lowerCaseQuery = query.toLowerCase();
+  const filteredData = tableData.filter(
+    (row) =>
+      row.name.toLowerCase().includes(lowerCaseQuery) ||
+      row.email.toLowerCase().includes(lowerCaseQuery) ||
+      row.department.toLowerCase().includes(lowerCaseQuery) ||
+      row.position.toLowerCase().includes(lowerCaseQuery) ||
+      row.status.toLowerCase().includes(lowerCaseQuery),
+  );
+
+  renderTable(filteredData);
+}
+
+// Open modal for adding/editing
+function openModal(rowId = null) {
+  if (rowId) {
+    // Editing existing row
+    isEditing = true;
+    editingRowId = rowId;
+    modalTitle.textContent = "Edit Row";
+
+    const row = tableData.find((r) => r.id === rowId);
+    if (row) {
+      newQuestion.value = row.question;
+      newCategory.value = row.category;
+      newAnswer.value = row.answer;
+      newHyperlink.value = row.hyperlink;
+      newTag.value = row.tag;
+      newStatus.value = row.status;
+    }
+  } else {
+    // Adding new row
+    isEditing = false;
+    editingRowId = null;
+    modalTitle.textContent = "Add New Row";
+    addForm.reset();
+  }
+
   addModal.style.display = "flex";
+}
+
+// Event listener for search input
+// MODAL BUTTON
+addRowBtn.addEventListener("click", function () {
+  openModal();
 });
 
 cancelAdd.addEventListener("click", () => {
@@ -186,29 +270,88 @@ window.addEventListener("click", (e) => {
   }
 });
 
-// SUBMIT NEW ADDED QNA FROM MODAL
-addForm.addEventListener("submit", async function(e) {
+// LISTENER FOR SUBMIT, EDITING
+addForm.addEventListener("submit", async function (e) {
   e.preventDefault();
 
-  const newData = {
-    question: document.getElementById("newQuestion").value,
-    category: document.getElementById("newCategory").value,
-    answer: document.getElementById("newAnswer").value,
-    hyperlink: document.getElementById("newHyperlink").value,
-    tag: document.getElementById("newTag").value,
-    status: document.getElementById("newStatus").value
+  const formData = {
+    question: newQuestion.value,
+    category: newCategory.value,
+    answer: newAnswer.value,
+    hyperlink: newHyperlink.value,
+    tag: newTag.value,
+    status: newStatus.value,
   };
 
-  await fetch("http://localhost:8000/crud/add", {
-    method: "POST",
-    headers: {
-      "Content-Type": "application/json"
-    },
-    body: JSON.stringify(newData)
-  });
+  try {
+    if (isEditing && editingRowId !== null) {
+      // 🔥 UPDATE MODE
+      await fetch(
+        `http://localhost:8000/crud/update/${editingRowId}`,
+        {
+          method: "PUT",
+          headers: {
+            "Content-Type": "application/json",
+          },
+          body: JSON.stringify(formData),
+        }
+      );
+    } else {
+      // 🔥 ADD MODE
+      await fetch("http://localhost:8000/crud/add", {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify(formData),
+      });
+    }
 
-  addModal.style.display = "none";
-  addForm.reset();
+    addModal.style.display = "none";
+    addForm.reset();
 
-  loadData(currentPage); 
+    isEditing = false;
+    editingRowId = null;
+
+    await loadData(currentPage);
+
+  } catch (error) {
+    console.error("Error submitting form:", error);
+  }
+});
+
+// Table body event delegation
+tableBody.addEventListener("click", function (e) {
+  const target = e.target;
+  const row = target.closest("tr");
+  if (!row) return;
+
+  const rowId = parseInt(row.getAttribute("data-id"));
+
+  // Edit button click
+  if (target.closest(".edit-btn")) {
+    openModal(rowId);
+  }
+
+  // Delete button click
+  if (target.closest(".delete-btn")) {
+    if (confirm("Are you sure you want to delete this row?")) {
+      deleteRow(rowId);
+    }
+  }
+
+  // Row checkbox click
+  if (target.classList.contains("row-select")) {
+    const isChecked = target.checked;
+
+    if (isChecked) {
+      selectedRows.add(rowId);
+    } else {
+      selectedRows.delete(rowId);
+      selectAllCheckbox.checked = false;
+    }
+
+    deleteSelectedBtn.style.display =
+      selectedRows.size > 0 ? "inline-flex" : "none";
+  }
 });

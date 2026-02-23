@@ -61,7 +61,7 @@
 <!-- MODAL QNA BUTTON -->
  <div id="addModal" class="modal">
   <div class="modal-content">
-    <h3>Tambah QnA</h3>
+    <h3 id="modalTitle">Tambah QnA</h3>
 
     <form id="addForm">
       <label>Question</label>
