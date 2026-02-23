@@ -1,17 +1,25 @@
+const addItemBtn = document.getElementById("addItemBtn");
+const addRowBtn = document.getElementById("addRowBtn");
+const addModal = document.getElementById("addModal");
+const cancelAdd = document.getElementById("cancelAdd");
+const addForm = document.getElementById("addForm");
+
 let currentPage = 1;
 let limit = 10;
 let selectedRows = new Set();
 
 document.addEventListener("DOMContentLoaded", function () {
   loadData();
+  loadCategories();
 });
 
+// FETCH DATATABLE
 async function loadData(page = 1) {
   try {
     currentPage = page;
 
     const response = await fetch(
-      `http://127.0.0.1:8000/crud/list?page=${page}&limit=${limit}`,
+      `http://localhost:8000/crud/list?page=${page}&limit=${limit}`,
     ); // pastikan endpoint benar
     const result = await response.json();
 
@@ -19,6 +27,26 @@ async function loadData(page = 1) {
     renderPagination(result.total, result.page);
   } catch (error) {
     console.error("Error fetching data:", error);
+  }
+}
+
+// LOAD CATEGORY MODAL
+async function loadCategories() {
+  try {
+    const response = await fetch(`http://localhost:8000/chatbot/categories`);
+    const categories = await response.json();
+
+    const newCategory = document.getElementById("newCategory");
+    newCategory.innerHTML = '<option value="">Select Category</option>';
+
+    categories.forEach((category) => {
+      const option = document.createElement("option");
+      option.value = category.category;
+      option.textContent = category.category;
+      newCategory.appendChild(option);
+    });
+  } catch (error) {
+    console.error("Error loading categories:", error);
   }
 }
 
@@ -140,3 +168,47 @@ function renderPagination(total, currentPage) {
   nextBtn.onclick = () => loadData(currentPage + 1);
   pagination.appendChild(nextBtn);
 }
+
+
+// MODAL BUTTON
+addRowBtn.addEventListener("click", () => {
+  addModal.style.display = "flex";
+});
+
+cancelAdd.addEventListener("click", () => {
+  addModal.style.display = "none";
+  addForm.reset();
+});
+
+window.addEventListener("click", (e) => {
+  if (e.target === addModal) {
+    addModal.style.display = "none";
+  }
+});
+
+// SUBMIT NEW ADDED QNA FROM MODAL
+addForm.addEventListener("submit", async function(e) {
+  e.preventDefault();
+
+  const newData = {
+    question: document.getElementById("newQuestion").value,
+    category: document.getElementById("newCategory").value,
+    answer: document.getElementById("newAnswer").value,
+    hyperlink: document.getElementById("newHyperlink").value,
+    tag: document.getElementById("newTag").value,
+    status: document.getElementById("newStatus").value
+  };
+
+  await fetch("/api/qna", {
+    method: "POST",
+    headers: {
+      "Content-Type": "application/json"
+    },
+    body: JSON.stringify(newData)
+  });
+
+  addModal.style.display = "none";
+  addForm.reset();
+
+  loadData(currentPage); // reload page sekarang
+});

@@ -58,51 +58,42 @@
     </div>
 </div>
 
-<!-- Modal for adding/editing rows -->
-<div class="modal" id="rowModal">
-    <div class="modal-content">
-        <div class="modal-header">
-            <h3 id="modalTitle">Add New Row</h3>
-        </div>
-        <form id="rowForm">
-            <div class="form-group">
-                <label for="inputName">Full Name *</label>
-                <input type="text" id="inputName" required>
-            </div>
-            <div class="form-group">
-                <label for="inputEmail">Email Address *</label>
-                <input type="email" id="inputEmail" required>
-            </div>
-            <div class="form-group">
-                <label for="inputDepartment">Department *</label>
-                <select id="inputDepartment" required>
-                    <option value="">Select Department</option>
-                    <option value="Engineering">Engineering</option>
-                    <option value="Marketing">Marketing</option>
-                    <option value="Sales">Sales</option>
-                    <option value="HR">Human Resources</option>
-                    <option value="Finance">Finance</option>
-                    <option value="Operations">Operations</option>
-                </select>
-            </div>
-            <div class="form-group">
-                <label for="inputPosition">Position *</label>
-                <input type="text" id="inputPosition" required>
-            </div>
-            <div class="form-group">
-                <label for="inputStatus">Status *</label>
-                <select id="inputStatus" required>
-                    <option value="Active">Active</option>
-                    <option value="Inactive">Inactive</option>
-                </select>
-            </div>
-            <div class="modal-actions">
-                <button type="button" class="btn btn-danger" id="cancelModalBtn">Cancel</button>
-                <button type="submit" class="btn btn-success">Save Row</button>
-            </div>
-        </form>
-    </div>
+<!-- MODAL QNA BUTTON -->
+ <div id="addModal" class="modal">
+  <div class="modal-content">
+    <h3>Tambah QnA</h3>
+
+    <form id="addForm">
+      <label>Question</label>
+      <textarea id="newQuestion" required></textarea>
+
+      <label>Category</label>
+      <select name="category" id="newCategory">
+      </select>
+
+      <label>Answer</label>
+      <textarea id="newAnswer" required></textarea>
+
+      <label>Hyperlink</label>
+      <input type="text" id="newHyperlink" />
+
+      <label>Tag</label>
+      <input type="text" id="newTag" />
+
+      <label>Status</label>
+      <select id="newStatus">
+        <option value="aktif">Aktif</option>
+        <option value="nonaktif">Non-aktif</option>
+      </select>
+
+      <div class="modal-actions">
+        <button type="button" id="cancelAdd">Cancel</button>
+        <button type="submit" class="primary">Save</button>
+      </div>
+    </form>
+  </div>
 </div>
+
 <script src="script.js"></script>
 
 </html>

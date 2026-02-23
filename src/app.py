@@ -2,7 +2,13 @@ from fastapi import APIRouter, FastAPI, Query
 from fastapi.middleware.cors import CORSMiddleware
 from pydantic import BaseModel
 
-from src.qa_crud import delete_qna_data, get_qna_data, insert_qna_data, update_qna_data
+from src.qa_crud import (
+    delete_qna_data,
+    get_categories,
+    get_qna_data,
+    insert_qna_data,
+    update_qna_data,
+)
 from src.qa_engine import get_answer, get_by_keyword
 
 app = FastAPI(title="QnA Chatbot API")
@@ -13,7 +19,7 @@ chatbot = APIRouter(prefix="/chatbot")
 
 app.add_middleware(
     CORSMiddleware,
-    allow_origins=["*"],  # local
+    allow_origins=["*"],
     # allow_origins=[os.getenv("URL_SITE")],  # with host
     allow_methods=["*"],
     allow_headers=["*"],
@@ -32,6 +38,11 @@ def root():
         "docs": "/docs",
         "endpoint": "/ask",
     }
+
+
+@chatbot.get("/categories")
+def read_categories():
+    return get_categories()
 
 
 @chatbot.get("/category/{selected_keyword}")
