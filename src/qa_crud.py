@@ -1,4 +1,6 @@
+import mysql.connector
 import pandas as pd
+from fastapi import HTTPException
 
 from database.connection import get_db_connection
 
@@ -58,28 +60,41 @@ def get_categories():
 
 
 def insert_qna_data(
-    question: str, category: str, answer: str, hyperlink: str, tag: str, status: int
+    question: str, category: str, answer: str, hyperlink: str, tag: str, status: str
 ):
 
     mydb, tunnel = get_db_connection()
 
     try:
         cursor = mydb.cursor()
+
         sql = "INSERT INTO hesk_chatbot_qna (question, keyword, answer, status) VALUES (%s, %s, %s, %s)"
-        val = (question, category, answer, status)
+        val = (
+            question,
+            category,
+            answer,
+            status,
+        )
         cursor.execute(sql, val)
         mydb.commit()
 
         qna_id = cursor.lastrowid
 
-        sql_link = (
-            "INSERT INTO hesk_chatbot_link (qna, hyperlink, tag) VALUES (%s, %s, %s)"
-        )
-        val_link = (qna_id, hyperlink, tag)
-        cursor.execute(sql_link, val_link)
-        mydb.commit()
+        if hyperlink and tag is not None:
+            sql_link = "INSERT INTO hesk_chatbot_link (qna, hyperlink, tag) VALUES (%s, %s, %s)"
+            val_link = (qna_id, hyperlink, tag)
+            cursor.execute(sql_link, val_link)
+            mydb.commit()
 
-        return qna_id
+            return qna_id
+        else:
+            return qna_id
+
+    except mysql.connector.errors.IntegrityError:
+        raise HTTPException(status_code=400, detail="Question already exists")
+
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=str(e))
 
     finally:
         mydb.close()

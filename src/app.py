@@ -87,7 +87,7 @@ def add_qna(data: dict):
         tag=data["tag"],
         status=data["status"],
     )
-    return {"message": "QnA added successfully", "qna_id": qna_id}
+    return {"message": "QnA added successfully", "id": qna_id}
 
 
 # UPDATE QNA DATA {ID}
