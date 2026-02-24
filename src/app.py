@@ -1,8 +1,11 @@
+from typing import List
+
 from fastapi import APIRouter, FastAPI, Query
 from fastapi.middleware.cors import CORSMiddleware
 from pydantic import BaseModel
 
 from src.qa_crud import (
+    delete_qna_bulk,
     delete_qna_data,
     get_categories,
     get_qna_data,
@@ -24,6 +27,10 @@ app.add_middleware(
     allow_methods=["*"],
     allow_headers=["*"],
 )
+
+
+class BulkDeleteRequest(BaseModel):
+    delete_ids: List[int]
 
 
 class QuestionRequest(BaseModel):
@@ -103,6 +110,13 @@ def update_qna(qna_id: int, data: dict):
 def delete_qna(qna_id: int):
     delete_qna_data(qna_id)
     return {"message": "QnA deleted successfully"}
+
+
+# DELETE BULK SELECTED DATA
+@crud.post("/delete-bulk")
+def delete_bulk(data: BulkDeleteRequest):
+    delete_qna_bulk(data.delete_ids)
+    return {"message": "Selected QnA deleted successfully"}
 
 
 # INCLUDE ROUTE INTO APP FASTAPI

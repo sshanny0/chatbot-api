@@ -4,6 +4,8 @@ const addRowBtn = document.getElementById("addRowBtn");
 const addModal = document.getElementById("addModal");
 const cancelAdd = document.getElementById("cancelAdd");
 const addForm = document.getElementById("addForm");
+const selectAllCheckbox = document.getElementById('selectAll');
+const deleteSelectedBtn = document.getElementById("deleteSelectedBtn");
 
 let currentPage = 1;
 let limit = 10;
@@ -25,7 +27,7 @@ async function loadData(page = 1) {
     ); // pastikan endpoint benar
     const result = await response.json();
 
-    tableData = result.data; 
+    tableData = result.data;
 
     renderTable(tableData);
     renderPagination(result.total, result.page);
@@ -51,6 +53,48 @@ async function loadCategories() {
     });
   } catch (error) {
     console.error("Error loading categories:", error);
+  }
+}
+
+// DELETE PROCESS BY ID
+async function deleteOne(id) {
+  try {
+    const response = await fetch(`http://localhost:8000/crud/delete/${id}`, {
+      method: "DELETE",
+    });
+
+    if (!response.ok) throw new Error("Delete failed");
+
+    selectedRows.delete(id); //update deleted row
+    await loadData(currentPage);
+  } catch (error) {
+    console.error("Error deleting row:", error);
+  }
+}
+
+// DELETE PROCESS BULK
+async function deleteBulk() {
+  if (selectedRows.size === 0) return;
+
+  if (!confirm(`Delete ${selectedRows.size} selected rows?`)) return;
+
+  try {
+    const response = await fetch("http://localhost:8000/crud/delete-bulk", {
+      method: "POST",
+      headers: {
+        "Content-Type": "application/json",
+      },
+      body: JSON.stringify({
+        delete_ids: Array.from(selectedRows),
+      }),
+    });
+
+    if (!response.ok) throw new Error("Bulk delete failed");
+
+    selectedRows.clear();
+    await loadData(currentPage);
+  } catch (error) {
+    console.error("Error bulk deleting:", error);
   }
 }
 
@@ -190,21 +234,6 @@ function deleteRow(id) {
   renderTable();
 }
 
-// Delete selected rows
-function deleteSelectedRows() {
-  if (selectedRows.size === 0) return;
-
-  if (
-    confirm(
-      `Are you sure you want to delete ${selectedRows.size} selected row(s)?`,
-    )
-  ) {
-    tableData = tableData.filter((row) => !selectedRows.has(row.id));
-    selectedRows.clear();
-    renderTable();
-  }
-}
-
 // Search functionality
 function searchTable(query) {
   if (!query.trim()) {
@@ -270,6 +299,18 @@ window.addEventListener("click", (e) => {
   }
 });
 
+// DELETE BULK BUTTON
+deleteSelectedBtn.addEventListener("click", async function () {
+  if (selectedRows.size === 0) return;
+
+  deleteSelectedBtn.disabled = true;
+  await deleteBulk();
+  deleteSelectedBtn.disabled = false;
+
+  selectedRows.clear();
+  deleteSelectedBtn.style.display = "none";
+});
+
 // LISTENER FOR SUBMIT, EDITING
 addForm.addEventListener("submit", async function (e) {
   e.preventDefault();
@@ -286,16 +327,13 @@ addForm.addEventListener("submit", async function (e) {
   try {
     if (isEditing && editingRowId !== null) {
       // 🔥 UPDATE MODE
-      await fetch(
-        `http://localhost:8000/crud/update/${editingRowId}`,
-        {
-          method: "PUT",
-          headers: {
-            "Content-Type": "application/json",
-          },
-          body: JSON.stringify(formData),
-        }
-      );
+      await fetch(`http://localhost:8000/crud/update/${editingRowId}`, {
+        method: "PUT",
+        headers: {
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify(formData),
+      });
     } else {
       // 🔥 ADD MODE
       await fetch("http://localhost:8000/crud/add", {
@@ -314,10 +352,26 @@ addForm.addEventListener("submit", async function (e) {
     editingRowId = null;
 
     await loadData(currentPage);
-
   } catch (error) {
     console.error("Error submitting form:", error);
   }
+});
+
+// Select all checkbox
+selectAllCheckbox.addEventListener("change", function () {
+  const rowCheckboxes = document.querySelectorAll(".row-select");
+  rowCheckboxes.forEach((checkbox) => {
+    checkbox.checked = this.checked;
+    const rowId = parseInt(checkbox.getAttribute("data-id"));
+
+    if (this.checked) {
+      selectedRows.add(rowId);
+    } else {
+      selectedRows.delete(rowId);
+    }
+  });
+
+  deleteSelectedBtn.style.display = this.checked ? "inline-flex" : "none";
 });
 
 // Table body event delegation
@@ -336,7 +390,7 @@ tableBody.addEventListener("click", function (e) {
   // Delete button click
   if (target.closest(".delete-btn")) {
     if (confirm("Are you sure you want to delete this row?")) {
-      deleteRow(rowId);
+      deleteOne(rowId);
     }
   }
 

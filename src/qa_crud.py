@@ -132,3 +132,23 @@ def delete_qna_data(qna_id: int):
     finally:
         mydb.close()
         tunnel.stop()
+
+
+def delete_qna_bulk(qna_ids: list):
+    mydb, tunnel = get_db_connection()
+
+    try:
+        cursor = mydb.cursor()
+        format_strings = ",".join(["%s"] * len(qna_ids))
+
+        sql_link = f"DELETE FROM hesk_chatbot_link WHERE qna IN ({format_strings})"
+        cursor.execute(sql_link, tuple(qna_ids))
+        mydb.commit()
+
+        sql = f"DELETE FROM hesk_chatbot_qna WHERE id IN ({format_strings})"
+        cursor.execute(sql, tuple(qna_ids))
+        mydb.commit()
+
+    finally:
+        mydb.close()
+        tunnel.stop()
