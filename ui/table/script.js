@@ -4,6 +4,7 @@ const addRowBtn = document.getElementById("addRowBtn");
 const addModal = document.getElementById("addModal");
 const cancelAdd = document.getElementById("cancelAdd");
 const addForm = document.getElementById("addForm");
+const searchInput = document.getElementById('searchInput');
 const selectAllCheckbox = document.getElementById("selectAll");
 const deleteSelectedBtn = document.getElementById("deleteSelectedBtn");
 
@@ -240,21 +241,16 @@ function deleteRow(id) {
 
 // Search functionality
 function searchTable(query) {
-  if (!query.trim()) {
-    renderTable();
-    return;
-  }
-
   const lowerCaseQuery = query.toLowerCase();
-  const filteredData = tableData.filter(
-    (row) =>
+  const filteredData = tableData.filter((row) => {
+    return (
       row.question.toLowerCase().includes(lowerCaseQuery) ||
       row.category.toLowerCase().includes(lowerCaseQuery) ||
       row.answer.toLowerCase().includes(lowerCaseQuery) ||
-      row.hyperlink.toLowerCase().includes(lowerCaseQuery) ||
-      row.tag.toLowerCase().includes(lowerCaseQuery) ||
-      row.status.toLowerCase().includes(lowerCaseQuery),
-  );
+      (row.tag && row.tag.toLowerCase().includes(lowerCaseQuery)) ||
+      row.status.toLowerCase().includes(lowerCaseQuery)
+    );
+  });
 
   renderTable(filteredData);
 }
@@ -337,6 +333,11 @@ window.addEventListener("click", (e) => {
   if (e.target === addModal) {
     addModal.style.display = "none";
   }
+});
+
+// Search input
+searchInput.addEventListener("input", function () {
+  searchTable(this.value);
 });
 
 // DELETE BULK BUTTON
