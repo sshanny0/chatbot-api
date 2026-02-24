@@ -4,7 +4,7 @@ const addRowBtn = document.getElementById("addRowBtn");
 const addModal = document.getElementById("addModal");
 const cancelAdd = document.getElementById("cancelAdd");
 const addForm = document.getElementById("addForm");
-const selectAllCheckbox = document.getElementById('selectAll');
+const selectAllCheckbox = document.getElementById("selectAll");
 const deleteSelectedBtn = document.getElementById("deleteSelectedBtn");
 
 let currentPage = 1;
@@ -67,8 +67,10 @@ async function deleteOne(id) {
 
     selectedRows.delete(id); //update deleted row
     await loadData(currentPage);
+    showToast("Data berhasil dihapus!", "success");
   } catch (error) {
     console.error("Error deleting row:", error);
+    showToast("Gagal menghapus data!", "error");
   }
 }
 
@@ -93,8 +95,10 @@ async function deleteBulk() {
 
     selectedRows.clear();
     await loadData(currentPage);
+    showToast("Data berhasil dihapus!", "success");
   } catch (error) {
     console.error("Error bulk deleting:", error);
+    showToast("Gagal menghapus data!", "error");
   }
 }
 
@@ -244,10 +248,11 @@ function searchTable(query) {
   const lowerCaseQuery = query.toLowerCase();
   const filteredData = tableData.filter(
     (row) =>
-      row.name.toLowerCase().includes(lowerCaseQuery) ||
-      row.email.toLowerCase().includes(lowerCaseQuery) ||
-      row.department.toLowerCase().includes(lowerCaseQuery) ||
-      row.position.toLowerCase().includes(lowerCaseQuery) ||
+      row.question.toLowerCase().includes(lowerCaseQuery) ||
+      row.category.toLowerCase().includes(lowerCaseQuery) ||
+      row.answer.toLowerCase().includes(lowerCaseQuery) ||
+      row.hyperlink.toLowerCase().includes(lowerCaseQuery) ||
+      row.tag.toLowerCase().includes(lowerCaseQuery) ||
       row.status.toLowerCase().includes(lowerCaseQuery),
   );
 
@@ -280,6 +285,41 @@ function openModal(rowId = null) {
   }
 
   addModal.style.display = "flex";
+}
+
+// toast Notification
+// fungsi membuat toast success
+function showToast(message, type = "success") {
+  const container = document.getElementById("toastContainer");
+  if (!container) return;
+
+  const toast = document.createElement("div");
+
+  // class dasar
+  toast.classList.add("toast");
+
+  // class berdasarkan tipe
+  if (type === "success") {
+    toast.classList.add("toastsuccess");
+  } else if (type === "error") {
+    toast.classList.add("toastfailed");
+  }
+
+  toast.textContent = message;
+  container.appendChild(toast);
+
+  // trigger animasi masuk
+  setTimeout(() => toast.classList.add("show"), 50);
+
+  // auto hide
+  setTimeout(() => {
+    toast.classList.remove("show");
+    toast.classList.add("hide");
+
+    toast.addEventListener("transitionend", () => {
+      toast.remove();
+    });
+  }, 3000);
 }
 
 // Event listener for search input
@@ -334,6 +374,7 @@ addForm.addEventListener("submit", async function (e) {
         },
         body: JSON.stringify(formData),
       });
+      showToast("Data berhasil diupdate!", "success");
     } else {
       // 🔥 ADD MODE
       await fetch("http://localhost:8000/crud/add", {
@@ -343,6 +384,8 @@ addForm.addEventListener("submit", async function (e) {
         },
         body: JSON.stringify(formData),
       });
+
+      showToast("Data berhasil ditambahkan!", "success");
     }
 
     addModal.style.display = "none";
@@ -354,6 +397,7 @@ addForm.addEventListener("submit", async function (e) {
     await loadData(currentPage);
   } catch (error) {
     console.error("Error submitting form:", error);
+    showToast("Proses gagal dilakukan!", "error");
   }
 });
 

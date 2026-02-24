@@ -56,42 +56,45 @@
         <p><i class="fa-solid fa-school" style="color: #007bff;"></i> Help Desk Unit TI &copy; Politeknik Siber dan
             Sandi Negara <i class="fa-solid fa-school" style="color: #007bff;"></i></p>
     </div>
+
+    <div id="toastContainer" class="toast-container top-right"></div>
 </div>
 
 <!-- MODAL QNA BUTTON -->
- <div id="addModal" class="modal">
-  <div class="modal-content">
-    <h3 id="modalTitle">Tambah QnA</h3>
+<div id="addModal" class="modal">
+    <div class="modal-content">
+        <h3 id="modalTitle">Tambah QnA</h3>
 
-    <form id="addForm">
-      <label>Question</label>
-      <textarea id="newQuestion" required></textarea>
+        <form id="addForm">
+            <label>Question</label>
+            <textarea id="newQuestion" required></textarea>
 
-      <label>Category</label>
-      <select name="category" id="newCategory">
-      </select>
+            <label>Category</label>
+            <select name="category" id="newCategory">
+            </select>
 
-      <label>Answer</label>
-      <textarea id="newAnswer" required></textarea>
+            <label>Answer</label>
+            <textarea id="newAnswer" required></textarea>
 
-      <label>Hyperlink</label>
-      <input type="text" id="newHyperlink" />
+            <label>Hyperlink</label>
+            <input type="text" id="newHyperlink" />
 
-      <label>Tag</label>
-      <input type="text" id="newTag" />
+            <label>Tag</label>
+            <input type="text" id="newTag" />
 
-      <label>Status</label>
-      <select id="newStatus">
-        <option value="aktif">Aktif</option>
-        <option value="nonaktif">Non-aktif</option>
-      </select>
+            <label>Status</label>
+            <select id="newStatus">
+                <option value="aktif">Aktif</option>
+                <option value="nonaktif">Non-aktif</option>
+            </select>
 
-      <div class="modal-actions">
-        <button type="button" id="cancelAdd">Cancel</button>
-        <button type="submit" class="primary">Save</button>
-      </div>
-    </form>
-  </div>
+            <div class="modal-actions">
+                <button type="button" id="cancelAdd">Cancel</button>
+                <button type="submit" class="primary" id="saveAdd">Save</button>
+
+            </div>
+        </form>
+    </div>
 </div>
 
 <script src="script.js"></script>
