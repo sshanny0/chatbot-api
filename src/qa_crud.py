@@ -68,10 +68,18 @@ def insert_qna_data(
     try:
         cursor = mydb.cursor()
 
-        sql = "INSERT INTO hesk_chatbot_qna (question, keyword, answer, status) VALUES (%s, %s, %s, %s)"
+        cursor.execute("SELECT id FROM hesk_categories WHERE name = %s", (category,))
+        join = cursor.fetchone()
+        if not join:
+            raise HTTPException(status_code=400, detail="Category does not exist")
+
+        category_id = join[0]
+
+        sql = "INSERT INTO hesk_chatbot_qna (category, keyword, question, answer, status) VALUES (%s, %s, %s, %s, %s)"
         val = (
-            question,
+            category_id,
             category,
+            question,
             answer,
             status,
         )
@@ -81,8 +89,8 @@ def insert_qna_data(
         qna_id = cursor.lastrowid
 
         if hyperlink and tag is not None:
-            sql_link = "INSERT INTO hesk_chatbot_link (qna, hyperlink, tag) VALUES (%s, %s, %s)"
-            val_link = (qna_id, hyperlink, tag)
+            sql_link = "INSERT INTO hesk_chatbot_link (category, qna, hyperlink, tag) VALUES (%s, %s, %s, %s)"
+            val_link = (category_id, qna_id, hyperlink, tag)
             cursor.execute(sql_link, val_link)
             mydb.commit()
 
@@ -114,15 +122,21 @@ def update_qna_data(
 
     try:
         cursor = mydb.cursor()
-        sql = "UPDATE hesk_chatbot_qna SET question = %s, keyword = %s, answer = %s, status = %s WHERE id = %s"
-        val = (question, category, answer, status, qna_id)
+
+        cursor.execute("SELECT id FROM hesk_categories WHERE name = %s", (category,))
+        join = cursor.fetchone()
+        if not join:
+            raise HTTPException(status_code=400, detail="Category does not exist")
+
+        category_id = join[0]
+
+        sql = "UPDATE hesk_chatbot_qna SET category = %s, keyword = %s, question = %s, answer = %s, status = %s WHERE id = %s"
+        val = (category_id, category, question, answer, status, qna_id)
         cursor.execute(sql, val)
         mydb.commit()
 
-        sql_link = (
-            "UPDATE hesk_chatbot_link SET hyperlink = %s, tag = %s WHERE qna = %s"
-        )
-        val_link = (hyperlink, tag, qna_id)
+        sql_link = "UPDATE hesk_chatbot_link SET category = %s, hyperlink = %s, tag = %s WHERE qna = %s"
+        val_link = (category_id, hyperlink, tag, qna_id)
         cursor.execute(sql_link, val_link)
         mydb.commit()
 
