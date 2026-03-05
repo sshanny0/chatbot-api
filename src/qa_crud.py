@@ -2,11 +2,11 @@ import mysql.connector
 import pandas as pd
 from fastapi import HTTPException
 
-from database.connection import get_db_connection
+from database.connection import get_read_connection, get_write_connection
 
 
 def get_qna_data(page: int = 1, limit: int = 10):
-    mydb, tunnel = get_db_connection()
+    conn = get_read_connection()
 
     try:
         offset = (page - 1) * limit
@@ -26,12 +26,12 @@ def get_qna_data(page: int = 1, limit: int = 10):
             ORDER BY id ASC
             LIMIT {limit} OFFSET {offset}
             """,
-            con=mydb,
+            con=conn,
         )
 
         total = pd.read_sql(
             "SELECT COUNT(*) as count FROM hesk_chatbot_qna",
-            con=mydb,
+            con=conn,
         )
 
         return {
@@ -42,32 +42,30 @@ def get_qna_data(page: int = 1, limit: int = 10):
         }
 
     finally:
-        mydb.close()
-        tunnel.stop()
+        conn.close()
 
 
 def get_categories():
-    mydb, tunnel = get_db_connection()
+    conn = get_read_connection()
+    cursor = conn.cursor(dictionary=True)
 
-    try:
-        category = pd.read_sql("SELECT name AS category FROM hesk_categories", con=mydb)
+    cursor.execute("SELECT name AS category FROM hesk_categories")
+    result = cursor.fetchall()
 
-        return category.to_dict(orient="records")
+    cursor.close()
+    conn.close()
 
-    finally:
-        mydb.close()
-        tunnel.stop()
+    return result
 
 
 def insert_qna_data(
     question: str, category: str, answer: str, hyperlink: str, tag: str, status: str
 ):
 
-    mydb, tunnel = get_db_connection()
+    conn = get_write_connection()
+    cursor = conn.cursor()
 
     try:
-        cursor = mydb.cursor()
-
         cursor.execute("SELECT id FROM hesk_categories WHERE name = %s", (category,))
         join = cursor.fetchone()
         if not join:
@@ -84,7 +82,7 @@ def insert_qna_data(
             status,
         )
         cursor.execute(sql, val)
-        mydb.commit()
+        conn.commit()
 
         qna_id = cursor.lastrowid
 
@@ -92,7 +90,7 @@ def insert_qna_data(
             sql_link = "INSERT INTO hesk_chatbot_link (category, qna, hyperlink, tag) VALUES (%s, %s, %s, %s)"
             val_link = (category_id, qna_id, hyperlink, tag)
             cursor.execute(sql_link, val_link)
-            mydb.commit()
+            conn.commit()
 
             return qna_id
         else:
@@ -105,8 +103,8 @@ def insert_qna_data(
         raise HTTPException(status_code=500, detail=str(e))
 
     finally:
-        mydb.close()
-        tunnel.stop()
+        cursor.close()
+        conn.close()
 
 
 def update_qna_data(
@@ -118,11 +116,10 @@ def update_qna_data(
     tag: str,
     status: int,
 ):
-    mydb, tunnel = get_db_connection()
+    conn = get_write_connection()
+    cursor = conn.cursor()
 
     try:
-        cursor = mydb.cursor()
-
         cursor.execute("SELECT id FROM hesk_categories WHERE name = %s", (category,))
         join = cursor.fetchone()
         if not join:
@@ -133,51 +130,51 @@ def update_qna_data(
         sql = "UPDATE hesk_chatbot_qna SET category = %s, keyword = %s, question = %s, answer = %s, status = %s WHERE id = %s"
         val = (category_id, category, question, answer, status, qna_id)
         cursor.execute(sql, val)
-        mydb.commit()
+        conn.commit()
 
         sql_link = "UPDATE hesk_chatbot_link SET category = %s, hyperlink = %s, tag = %s WHERE qna = %s"
         val_link = (category_id, hyperlink, tag, qna_id)
         cursor.execute(sql_link, val_link)
-        mydb.commit()
+        conn.commit()
 
     finally:
-        mydb.close()
-        tunnel.stop()
+        cursor.close()
+        conn.close()
 
 
 def delete_qna_data(qna_id: int):
-    mydb, tunnel = get_db_connection()
+    conn = get_write_connection()
+    cursor = conn.cursor()
 
     try:
-        cursor = mydb.cursor()
         sql_link = "DELETE FROM hesk_chatbot_link WHERE qna = %s"
         cursor.execute(sql_link, (qna_id,))
-        mydb.commit()
+        conn.commit()
 
         sql = "DELETE FROM hesk_chatbot_qna WHERE id = %s"
         cursor.execute(sql, (qna_id,))
-        mydb.commit()
+        conn.commit()
 
     finally:
-        mydb.close()
-        tunnel.stop()
+        cursor.close()
+        conn.close()
 
 
 def delete_qna_bulk(qna_ids: list):
-    mydb, tunnel = get_db_connection()
+    conn = get_write_connection()
+    cursor = conn.cursor()
 
     try:
-        cursor = mydb.cursor()
         format_strings = ",".join(["%s"] * len(qna_ids))
 
         sql_link = f"DELETE FROM hesk_chatbot_link WHERE qna IN ({format_strings})"
         cursor.execute(sql_link, tuple(qna_ids))
-        mydb.commit()
+        conn.commit()
 
         sql = f"DELETE FROM hesk_chatbot_qna WHERE id IN ({format_strings})"
         cursor.execute(sql, tuple(qna_ids))
-        mydb.commit()
+        conn.commit()
 
     finally:
-        mydb.close()
-        tunnel.stop()
+        cursor.close()
+        conn.close()

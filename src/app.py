@@ -12,7 +12,7 @@ from src.qa_crud import (
     insert_qna_data,
     update_qna_data,
 )
-from src.qa_engine import get_answer, get_by_keyword
+from src.qa_engine import get_answer, get_by_keyword, reload_engine
 
 app = FastAPI(title="QnA Chatbot API")
 
@@ -87,6 +87,7 @@ def add_qna(data: dict):
         tag=data["tag"],
         status=data["status"],
     )
+    reload_engine()
     return {"message": "QnA added successfully", "id": qna_id}
 
 
@@ -102,6 +103,7 @@ def update_qna(qna_id: int, data: dict):
         tag=data["tag"],
         status=data["status"],
     )
+    reload_engine()
     return {"message": "QnA updated successfully"}
 
 
@@ -109,6 +111,7 @@ def update_qna(qna_id: int, data: dict):
 @crud.delete("/delete/{qna_id}")
 def delete_qna(qna_id: int):
     delete_qna_data(qna_id)
+    reload_engine()
     return {"message": "QnA deleted successfully"}
 
 
@@ -116,6 +119,7 @@ def delete_qna(qna_id: int):
 @crud.post("/delete-bulk")
 def delete_bulk(data: BulkDeleteRequest):
     delete_qna_bulk(data.delete_ids)
+    reload_engine()
     return {"message": "Selected QnA deleted successfully"}
 
 
