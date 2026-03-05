@@ -280,7 +280,21 @@ def get_answer(user_question, testing=False):
                 "final": round(float(best_score), 3),
             },
         }
+    elif 0.4 >= best_base_score < 0.6:
+        top_indices = raw_scores.argsort()[-3:][::-1]
 
+        suggestions = []
+        for i in top_indices:
+            suggestions.append(
+                {"question": question[i], "score": round(float(raw_scores[i]), 3)}
+            )
+
+        return {
+            "Status": "suggestion",
+            "Message": "Apakah yang Anda maksud salah satu dari pertanyaan berikut?",
+            "Suggestions": suggestions,
+            "Skor": round(float(best_base_score), 3),
+        }
     else:
         if not testing:
             save_unknown(user_question)

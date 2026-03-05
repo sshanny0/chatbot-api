@@ -68,23 +68,75 @@ function sendMessage(textFromSuggestion = null) {
   })
     .then((res) => res.json())
     .then((data) => {
-      if (data.Jawaban) {
+
+      if (data.Status === "known") {
         addMessage(
           data.Jawaban,
           "sender",
           data.Link?.url,
           data.Link?.tag
         );
-      } else {
+      }
+
+      else if (data.Status === "suggestion") {
+        showSuggestions(data.Suggestions);
+      }
+
+      else {
         addMessage(
-          "Mohon maaf saya belum yakin dengan jawaban saya 🙏 Silakan hubungi Helpdesk TI ",
-          "sender",
+          "Mohon maaf saya belum yakin dengan jawaban saya 🙏 Silakan hubungi Helpdesk TI",
+          "sender"
         );
       }
+
     })
     .catch(() => {
        addMessage("Server error ❎", "sender");
     });
+}
+
+// SHOW SUGGESTIONS
+function showSuggestions(suggestions) {
+
+  const li = document.createElement("li");
+  li.className = "sender";
+
+  let suggestionHTML = `
+    <div class="message-content">
+      <p>Apakah maksud Anda salah satu dari ini?</p>
+      <div class="suggestions">
+  `;
+
+  suggestions.forEach((item) => {
+    suggestionHTML += `
+      <button class="suggestion-btn" data-question="${item.question}">
+        ${item.question}
+      </button>
+    `;
+  });
+
+  suggestionHTML += `
+      </div>
+    </div>
+  `;
+
+  li.innerHTML = `
+    <img src="../img/icon-helpdesk.png">
+    ${suggestionHTML}
+  `;
+
+  messageList.appendChild(li);
+
+  document.querySelectorAll(".suggestion-btn").forEach((btn) => {
+    btn.addEventListener("click", () => {
+      sendMessage(btn.dataset.question);
+    });
+  });
+
+  chatBody.scrollTo({
+    top: chatBody.scrollHeight,
+    behavior: "smooth"
+  });
 }
 
 // grouping by category for quick replies

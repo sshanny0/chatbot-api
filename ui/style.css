@@ -103,6 +103,27 @@ body {
   cursor: pointer;
 }
 
+/* RENDER SUGGESTION */
+.suggestions {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  margin-top: 8px;
+}
+
+.suggestion-btn {
+  background: #f1f1f1;
+  border: none;
+  padding: 6px 10px;
+  border-radius: 6px;
+  cursor: pointer;
+  text-align: left;
+}
+
+.suggestion-btn:hover {
+  background: #e0e0e0;
+}
+
 @keyframes wobble {
   0% {
     transform: rotate(0deg);
