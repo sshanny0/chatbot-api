@@ -34,7 +34,7 @@
 							</p>
 						</div>
 					</li>
-					<li class="sender">
+					<!-- <li class="sender">
 						<img src="../img/icon-helpdesk.png" alt="icon-message">
 						<div class="message-content">
 							<p>Pilih salah satu topik dibawah ini, atau ketik pertanyaan Anda!</p>
@@ -53,7 +53,7 @@
 					<button onclick="loadCategory('Layanan Koneksi Internet')">Network</button>
 					<button onclick="loadCategory('Layanan Anti Virus SentinelOne')">Antivirus</button>
 					<button onclick="loadCategory('Layanan Akun')">Single Sign-On (SSO)</button>
-				</div>
+				</div> -->
 			</div>
 
 			<div class="chat-footer">
