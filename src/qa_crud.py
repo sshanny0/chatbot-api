@@ -86,14 +86,12 @@ def insert_qna_data(
 
         qna_id = cursor.lastrowid
 
-        if hyperlink and tag is not None:
+        if hyperlink and tag:
             sql_link = "INSERT INTO hesk_chatbot_link (category, qna, hyperlink, tag) VALUES (%s, %s, %s, %s)"
             val_link = (category_id, qna_id, hyperlink, tag)
             cursor.execute(sql_link, val_link)
             conn.commit()
 
-            return qna_id
-        else:
             return qna_id
 
     except mysql.connector.errors.IntegrityError:
@@ -125,6 +123,9 @@ def update_qna_data(
         if not join:
             raise HTTPException(status_code=400, detail="Category does not exist")
 
+        cursor.execute("SELECT id FROM hesk_chatbot_link WHERE qna = %s", (qna_id,))
+
+        check_id = cursor.fetchone()
         category_id = join[0]
 
         sql = "UPDATE hesk_chatbot_qna SET category = %s, keyword = %s, question = %s, answer = %s, status = %s WHERE id = %s"
@@ -132,10 +133,16 @@ def update_qna_data(
         cursor.execute(sql, val)
         conn.commit()
 
-        sql_link = "UPDATE hesk_chatbot_link SET category = %s, hyperlink = %s, tag = %s WHERE qna = %s"
-        val_link = (category_id, hyperlink, tag, qna_id)
-        cursor.execute(sql_link, val_link)
-        conn.commit()
+        if not check_id:
+            sql_link = "INSERT INTO hesk_chatbot_link (category, qna, hyperlink, tag) VALUES (%s, %s, %s, %s)"
+            val_link = (category_id, qna_id, hyperlink, tag)
+            cursor.execute(sql_link, val_link)
+            conn.commit()
+        else:
+            sql_link = "UPDATE hesk_chatbot_link SET category = %s, hyperlink = %s, tag = %s WHERE qna = %s"
+            val_link = (category_id, hyperlink, tag, qna_id)
+            cursor.execute(sql_link, val_link)
+            conn.commit()
 
     finally:
         cursor.close()
