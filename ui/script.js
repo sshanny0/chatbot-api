@@ -46,15 +46,18 @@ function addMessage(text, sender = "me", link = null, tag = null) {
   }
 }
 
-sendBtn.addEventListener("click", sendMessage);
+sendBtn.addEventListener("click", () => sendMessage());
 input.addEventListener("keypress", (e) => {
   if (e.key === "Enter") sendMessage();
 });
 
 function sendMessage(textFromSuggestion = null) {
   const text = textFromSuggestion || input.value.trim();
-  if (!text) return;
-
+  if (!text) {
+    addMessage("Silakan isi pesan dulu 🙏", "sender");
+    return;
+  }
+  
   addMessage(text, "me");
   input.value = "";
 
