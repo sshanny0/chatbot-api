@@ -130,9 +130,16 @@ function showSuggestions(suggestions) {
 
   messageList.appendChild(li);
 
-  document.querySelectorAll(".suggestion-btn").forEach((btn) => {
+  li.querySelectorAll(".suggestion-btn").forEach((btn) => {
     btn.addEventListener("click", () => {
       sendMessage(btn.dataset.question);
+
+            // disable semua tombol
+      li.querySelectorAll(".suggestion-btn").forEach((b) => {
+        b.disabled = true;
+        b.style.opacity = "0.5";
+        b.style.cursor = "not-allowed";
+      });
     });
   });
 
