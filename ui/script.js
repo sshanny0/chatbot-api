@@ -9,6 +9,8 @@ const nearBottom =
   chatBody.scrollHeight - chatBody.scrollTop <= chatBody.clientHeight + 50;
 const scrollBtn = document.getElementById("scrollToBottomBtn");
 
+sendBtn.disabled = true;
+
 chatButton.addEventListener("click", () => {
   chatBox.classList.toggle("hidden");
 });
@@ -46,17 +48,30 @@ function addMessage(text, sender = "me", link = null, tag = null) {
   }
 }
 
-sendBtn.addEventListener("click", () => sendMessage());
-input.addEventListener("keypress", (e) => {
-  if (e.key === "Enter") sendMessage();
+input.addEventListener("input", () => {
+  sendBtn.disabled = !input.value.trim();
+});
+input.addEventListener("keydown", (e) => {
+  if (e.key === "Enter") {
+    e.preventDefault();
+    if (input.value.trim()) {
+      sendMessage();
+    }
+  }
+});
+
+sendBtn.addEventListener("click", () => {
+  if (input.value.trim()) {
+    sendMessage();
+  }
 });
 
 function sendMessage(textFromSuggestion = null) {
   const text = textFromSuggestion || input.value.trim();
-  if (!text) {
-    addMessage("Silakan isi pesan dulu 🙏", "sender");
-    return;
-  }
+  // if (!text) {
+  //   addMessage("Silakan isi pesan dulu 🙏", "sender");
+  //   return;
+  // }
   
   addMessage(text, "me");
   input.value = "";

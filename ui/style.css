@@ -194,6 +194,11 @@ ul.message li.me .message-content {
   cursor: pointer;
 }
 
+.send-button:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+}
+
 .chat-footer input {
   padding: 15px 20px;
   width: 100%;
