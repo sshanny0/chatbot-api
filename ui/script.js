@@ -56,6 +56,7 @@ input.addEventListener("keydown", (e) => {
     e.preventDefault();
     if (input.value.trim()) {
       sendMessage();
+      sendBtn.disabled = true;
     }
   }
 });
@@ -63,6 +64,7 @@ input.addEventListener("keydown", (e) => {
 sendBtn.addEventListener("click", () => {
   if (input.value.trim()) {
     sendMessage();
+    sendBtn.disabled = true;
   }
 });
 
