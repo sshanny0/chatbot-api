@@ -438,6 +438,11 @@ td:last-child {
   color: white;
 }
 
+.modal-actions .primary:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+}
+
 /* TOAST NOTFICITATION */
 /* container toast */
 .toast-container {

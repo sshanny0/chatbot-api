@@ -8,6 +8,11 @@ const searchInput = document.getElementById('searchInput');
 const selectAllCheckbox = document.getElementById("selectAll");
 const deleteSelectedBtn = document.getElementById("deleteSelectedBtn");
 
+const saveBtn = document.getElementById("saveAdd");
+const newQuestion = document.getElementById("newQuestion");
+const newAnswer = document.getElementById("newAnswer");
+const newCategory = document.getElementById("newCategory");
+
 let currentPage = 1;
 let limit = 10;
 let selectedRows = new Set();
@@ -321,6 +326,7 @@ function showToast(message, type = "success") {
 // Event listener for search input
 // MODAL BUTTON
 addRowBtn.addEventListener("click", function () {
+  saveBtn.disabled = true;
   openModal();
 });
 
@@ -351,6 +357,23 @@ deleteSelectedBtn.addEventListener("click", async function () {
   selectedRows.clear();
   deleteSelectedBtn.style.display = "none";
 });
+
+// Listener untuk cek masing2 form input
+function checkInputs() {
+  if (
+    newQuestion.value.trim() !== "" &&
+    newAnswer.value.trim() !== "" &&
+    newCategory.value.trim() !== ""
+  ) {
+    saveBtn.disabled = false;
+  } else {
+    saveBtn.disabled = true;
+  }
+}
+
+newQuestion.addEventListener("input", checkInputs);
+newAnswer.addEventListener("input", checkInputs);
+newCategory.addEventListener("input", checkInputs);
 
 // LISTENER FOR SUBMIT, EDITING
 addForm.addEventListener("submit", async function (e) {
@@ -391,6 +414,7 @@ addForm.addEventListener("submit", async function (e) {
 
     addModal.style.display = "none";
     addForm.reset();
+    saveBtn.disabled = true;
 
     isEditing = false;
     editingRowId = null;
