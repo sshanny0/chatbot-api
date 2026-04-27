@@ -74,6 +74,9 @@ function sendMessage(textFromSuggestion = null) {
   //   addMessage("Silakan isi pesan dulu 🙏", "sender");
   //   return;
   // }
+  if (!textFromSuggestion) {
+    disableAllSuggestions();
+  }
   
   addMessage(text, "me");
   input.value = "";
@@ -163,6 +166,15 @@ function showSuggestions(suggestions) {
   chatBody.scrollTo({
     top: chatBody.scrollHeight,
     behavior: "smooth"
+  });
+}
+
+// DISABLED SUGGESTIONS
+function disableAllSuggestions() {
+  document.querySelectorAll(".suggestion-btn").forEach((btn) => {
+    btn.disabled = true;
+    btn.style.opacity = "0.5";
+    btn.style.cursor = "not-allowed";
   });
 }
 
