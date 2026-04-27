@@ -32,6 +32,12 @@ body {
   gap: 15px;
 }
 
+/* container tombol horizontal */
+.floating-actions {
+  display: flex;
+  gap: 10px;
+}
+
 /* Hidden state */
 .hidden {
   opacity: 0;
@@ -101,6 +107,28 @@ body {
 .close-chat {
   margin-left: auto;
   cursor: pointer;
+}
+
+/* WHATSAPP */
+.whatsapp-button {
+  width: 50px;
+  height: 50px;
+  border-radius: 50%;
+  overflow: hidden;
+  cursor: pointer;
+}
+
+.whatsapp-button img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+}
+
+/* hide whatsapp */
+.chat-bot.chat-open .whatsapp-button {
+  opacity: 0;
+  pointer-events: none;
+  transform: translateY(10px);
 }
 
 /* RENDER SUGGESTION */

@@ -67,12 +67,21 @@
 			</div>
 		</div>
 
-		<div class="chat-button" id="chatButton">
-			<svg height="25px" viewBox="0 0 640 640">
-				<path fill="currentColor"
-					d="M115.9 448.9C83.3 408.6 64 358.4 64 304C64 171.5 178.6 64 320 64C461.4 64 576 171.5 576 304C576 436.5 461.4 544 320 544C283.5 544 248.8 536.8 217.4 524L101 573.9C97.3 575.5 93.5 576 89.5 576C75.4 576 64 564.6 64 550.5C64 546.2 65.1 542 67.1 538.3L115.9 448.9z" />
-			</svg>
+		<div class="floating-actions">	
+			<div class="whatsapp-button">
+				<a href="https://wa.me/6285281023064?text=Halo%2C%20saya%20ingin%20bertanya%20tentang" target="_blank">
+					<img src="../img/icon-wa.png" alt="WhatsApp">
+				</a>
+    		</div>
+					
+			<div class="chat-button" id="chatButton">
+				<svg height="25px" viewBox="0 0 640 640">
+					<path fill="currentColor"
+						d="M115.9 448.9C83.3 408.6 64 358.4 64 304C64 171.5 178.6 64 320 64C461.4 64 576 171.5 576 304C576 436.5 461.4 544 320 544C283.5 544 248.8 536.8 217.4 524L101 573.9C97.3 575.5 93.5 576 89.5 576C75.4 576 64 564.6 64 550.5C64 546.2 65.1 542 67.1 538.3L115.9 448.9z" />
+				</svg>
+			</div>
 		</div>
+
 	</div>
 
 	<script src="script.js"></script>

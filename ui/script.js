@@ -5,6 +5,7 @@ const chatButton = document.getElementById("chatButton");
 const chatBox = document.getElementById("chatBox");
 const closeChat = document.getElementById("closeChat");
 const chatBody = document.querySelector(".chat-body");
+const chatBot = document.querySelector(".chat-bot");
 const nearBottom =
   chatBody.scrollHeight - chatBody.scrollTop <= chatBody.clientHeight + 50;
 const scrollBtn = document.getElementById("scrollToBottomBtn");
@@ -13,10 +14,12 @@ sendBtn.disabled = true;
 
 chatButton.addEventListener("click", () => {
   chatBox.classList.toggle("hidden");
+  chatBot.classList.toggle("chat-open");
 });
 
 closeChat.addEventListener("click", () => {
   chatBox.classList.add("hidden");
+  chatBot.classList.remove("chat-open");
 });
 
 function addMessage(text, sender = "me", link = null, tag = null) {
