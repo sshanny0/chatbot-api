@@ -278,6 +278,8 @@ function openModal(rowId = null) {
       newHyperlink.value = row.hyperlink;
       newTag.value = row.tag;
       newStatus.value = row.status;
+
+      checkInputs();
     }
   } else {
     // Adding new row
@@ -361,25 +363,41 @@ deleteSelectedBtn.addEventListener("click", async function () {
 });
 
 // Listener untuk cek masing2 form input
-function checkInputs() {
-  if (
+function isFormValid() {
+  const isMainFilled =
     newQuestion.value.trim() !== "" &&
     newAnswer.value.trim() !== "" &&
-    newCategory.value.trim() !== ""
-  ) {
-    saveBtn.disabled = false;
+    newCategory.value.trim() !== "";
+
+  const isOptionalFilled =
+    newHyperlink.value.trim() !== "" &&
+    newTag.value.trim() !== "";
+
+  if (isEditing) {
+    return isMainFilled && isOptionalFilled && editingRowId != null;
   } else {
-    saveBtn.disabled = true;
+    return isMainFilled;
   }
+}
+
+function checkInputs() {
+  saveBtn.disabled = !isFormValid();
 }
 
 newQuestion.addEventListener("input", checkInputs);
 newAnswer.addEventListener("input", checkInputs);
 newCategory.addEventListener("input", checkInputs);
+newHyperlink.addEventListener("input", checkInputs);
+newTag.addEventListener("input", checkInputs);
 
 // LISTENER FOR SUBMIT, EDITING
 addForm.addEventListener("submit", async function (e) {
   e.preventDefault();
+
+  if (!isFormValid()) {
+    showToast("Form belum valid", "error");
+    return;
+  }
 
   const formData = {
     question: newQuestion.value,
@@ -387,7 +405,7 @@ addForm.addEventListener("submit", async function (e) {
     answer: newAnswer.value,
     hyperlink: newHyperlink.value,
     tag: newTag.value,
-    status: newStatus.value,
+    status: newStatus.value,s
   };
 
   try {
