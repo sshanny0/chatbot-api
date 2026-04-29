@@ -128,7 +128,11 @@ def update_qna_data(
         check_id = cursor.fetchone()
         category_id = join[0]
 
-        sql = "UPDATE hesk_chatbot_qna SET category = %s, keyword = %s, question = %s, answer = %s, status = %s WHERE id = %s"
+        sql = (
+            "UPDATE hesk_chatbot_qna SET category = %s, keyword = %s, "
+            "question = %s, answer = %s, status = %s, updated_at = NOW()"
+            " WHERE id = %s"
+        )
         val = (category_id, category, question, answer, status, qna_id)
         cursor.execute(sql, val)
         conn.commit()
