@@ -12,6 +12,8 @@ const saveBtn = document.getElementById("saveAdd");
 const newQuestion = document.getElementById("newQuestion");
 const newAnswer = document.getElementById("newAnswer");
 const newCategory = document.getElementById("newCategory");
+const newHyperlink = document.getElementById("newHyperlink");
+const newTag = document.getElementById("newTag");
 
 let currentPage = 1;
 let limit = 10;
