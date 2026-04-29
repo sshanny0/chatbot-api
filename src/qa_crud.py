@@ -137,17 +137,30 @@ def update_qna_data(
         cursor.execute(sql, val)
         conn.commit()
 
-        if not check_id:
-            sql_link = "INSERT INTO hesk_chatbot_link (category, qna, hyperlink, tag) VALUES (%s, %s, %s, %s)"
-            val_link = (category_id, qna_id, hyperlink, tag)
-            cursor.execute(sql_link, val_link)
-            conn.commit()
-        else:
-            sql_link = "UPDATE hesk_chatbot_link SET category = %s, hyperlink = %s, tag = %s WHERE qna = %s"
-            val_link = (category_id, hyperlink, tag, qna_id)
-            cursor.execute(sql_link, val_link)
-            conn.commit()
+        is_empty = (not hyperlink or hyperlink.strip() == "") and (
+            not tag or tag.strip() == ""
+        )
 
+        if check_id:
+            if not is_empty:
+                sql_link = (
+                    "UPDATE hesk_chatbot_link "
+                    "SET category = %s, hyperlink = %s, tag = %s "
+                    "WHERE qna = %s"
+                )
+                val_link = (category_id, hyperlink, tag, qna_id)
+                cursor.execute(sql_link, val_link)
+                conn.commit()
+        else:
+            if not is_empty:
+                sql_link = (
+                    "INSERT INTO hesk_chatbot_link "
+                    "(category, qna, hyperlink, tag) "
+                    "VALUES (%s, %s, %s, %s)"
+                )
+                val_link = (category_id, qna_id, hyperlink, tag)
+                cursor.execute(sql_link, val_link)
+                conn.commit()
     finally:
         cursor.close()
         conn.close()
