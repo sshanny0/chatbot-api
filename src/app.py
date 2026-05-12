@@ -83,8 +83,7 @@ def add_qna(data: dict):
         question=data["question"],
         category=data["category"],
         answer=data["answer"],
-        hyperlink=data["hyperlink"],
-        tag=data["tag"],
+        links=data.get("links", []),
         status=data["status"],
     )
     reload_engine()
@@ -99,8 +98,7 @@ def update_qna(qna_id: int, data: dict):
         question=data["question"],
         category=data["category"],
         answer=data["answer"],
-        hyperlink=data["hyperlink"],
-        tag=data["tag"],
+        links=data.get("links", []),
         status=data["status"],
     )
     reload_engine()

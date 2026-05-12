@@ -108,7 +108,7 @@ def get_categories():
 
 
 def insert_qna_data(
-    question: str, category: str, answer: str, hyperlink: str, tag: str, status: str
+    question: str, category: str, answer: str, links: list, status: str
 ):
 
     conn = get_write_connection()
@@ -122,7 +122,11 @@ def insert_qna_data(
 
         category_id = join[0]
 
-        sql = "INSERT INTO hesk_chatbot_qna (category, keyword, question, answer, status) VALUES (%s, %s, %s, %s, %s)"
+        sql = (
+            "INSERT INTO hesk_chatbot_qna "
+            "(category, keyword, question, answer, status) "
+            "VALUES (%s, %s, %s, %s, %s)"
+        )
         val = (
             category_id,
             category,
@@ -135,11 +139,19 @@ def insert_qna_data(
 
         qna_id = cursor.lastrowid
 
-        if hyperlink and tag:
-            sql_link = "INSERT INTO hesk_chatbot_link (category, qna, hyperlink, tag) VALUES (%s, %s, %s, %s)"
-            val_link = (category_id, qna_id, hyperlink, tag)
-            cursor.execute(sql_link, val_link)
-            conn.commit()
+        if links:
+            for link in links:
+                if not link.get("hyperlink") or not link.get("tag"):
+                    continue
+
+                sql_link = (
+                    "INSERT INTO hesk_chatbot_link "
+                    "(category, qna, hyperlink, tag) "
+                    "VALUES (%s, %s, %s, %s)"
+                )
+                val_link = (category_id, qna_id, link.get("hyperlink"), link.get("tag"))
+                cursor.execute(sql_link, val_link)
+                conn.commit()
 
             return qna_id
 
@@ -159,8 +171,7 @@ def update_qna_data(
     question: str,
     category: str,
     answer: str,
-    hyperlink: str,
-    tag: str,
+    links: list,
     status: int,
 ):
     conn = get_write_connection()
@@ -172,44 +183,63 @@ def update_qna_data(
         if not join:
             raise HTTPException(status_code=400, detail="Category does not exist")
 
-        cursor.execute("SELECT id FROM hesk_chatbot_link WHERE qna = %s", (qna_id,))
-
-        check_id = cursor.fetchone()
         category_id = join[0]
 
+        cursor.execute("SELECT id FROM hesk_chatbot_link WHERE qna = %s", (qna_id,))
+
+        existing_link = cursor.fetchall()
+
+        existing_ids = {row[0] for row in existing_link}
+
+        incoming_ids = {link["id"] for link in links if link.get("id")}
+
+        deleted_ids = existing_ids - incoming_ids
+
+        # delete link yg dihapus
+        for link_id in deleted_ids:
+            cursor.execute("DELETE FROM hesk_chatbot_link WHERE id = %s", (link_id,))
+
+        # update qna
         sql = (
             "UPDATE hesk_chatbot_qna SET category = %s, keyword = %s, "
             "question = %s, answer = %s, status = %s, updated_at = NOW()"
             " WHERE id = %s"
         )
+
         val = (category_id, category, question, answer, status, qna_id)
         cursor.execute(sql, val)
-        conn.commit()
 
-        is_empty = (not hyperlink or hyperlink.strip() == "") and (
-            not tag or tag.strip() == ""
-        )
+        # update / insert links
+        for link in links:
+            # skip kalau hyperlink kosong
+            if not link.get("hyperlink"):
+                continue
 
-        if check_id:
-            if not is_empty:
+            if link.get("id"):
+                # UPDATE existing link
                 sql_link = (
                     "UPDATE hesk_chatbot_link "
-                    "SET category = %s, hyperlink = %s, tag = %s "
-                    "WHERE qna = %s"
+                    "SET hyperlink = %s, tag = %s "
+                    "WHERE id = %s"
                 )
-                val_link = (category_id, hyperlink, tag, qna_id)
+
+                val_link = (link["hyperlink"], link.get("tag"), link["id"])
+
                 cursor.execute(sql_link, val_link)
-                conn.commit()
-        else:
-            if not is_empty:
+
+            else:
+                # INSERT new link
                 sql_link = (
                     "INSERT INTO hesk_chatbot_link "
                     "(category, qna, hyperlink, tag) "
                     "VALUES (%s, %s, %s, %s)"
                 )
-                val_link = (category_id, qna_id, hyperlink, tag)
+
+                val_link = (category_id, qna_id, link["hyperlink"], link.get("tag"))
+
                 cursor.execute(sql_link, val_link)
-                conn.commit()
+
+        conn.commit()
     finally:
         cursor.close()
         conn.close()
