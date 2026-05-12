@@ -11,23 +11,72 @@ def get_qna_data(page: int = 1, limit: int = 10):
     try:
         offset = (page - 1) * limit
 
-        data = pd.read_sql(
+        data_qna = pd.read_sql(
             f"""
-            SELECT a.ID AS id,
-                   a.question AS question,
-                   a.keyword AS category,
-                   a.answer AS answer,
-                   b.hyperlink AS hyperlink,
-                   b.tag AS tag,
-                   a.status AS status
-            FROM hesk_chatbot_qna a
-            LEFT JOIN hesk_chatbot_link b
-            ON a.id = b.qna
+            SELECT ID AS id,
+                    question AS question,
+                    keyword AS category,
+                    answer AS answer,
+                    status AS status
+            FROM hesk_chatbot_qna
             ORDER BY id ASC
             LIMIT {limit} OFFSET {offset}
             """,
             con=conn,
         )
+
+        #  GET QNA ID
+        qna_ids = data_qna["id"].tolist()
+
+        if not qna_ids:
+            return {
+                "data": [],
+                "total": 0,
+                "page": page,
+                "limit": limit,
+            }
+
+        data_link = pd.read_sql(
+            f"""        
+            SELECT id AS id_link,
+                qna AS qna,
+                hyperlink AS hyperlink,
+                tag AS tag
+            FROM hesk_chatbot_link
+            WHERE qna IN ({",".join(map(str, qna_ids))})
+            """,
+            con=conn,
+        )
+
+        # group links by qna
+        links_grouped = {}
+
+        for _, row in data_link.iterrows():
+            qna_id = row["qna"]
+
+            if qna_id not in links_grouped:
+                links_grouped[qna_id] = []
+
+            links_grouped[qna_id].append(
+                {"id": row["id_link"], "hyperlink": row["hyperlink"], "tag": row["tag"]}
+            )
+
+        # MERGE QNA AND LINKS DATA
+        final_data = []
+
+        for _, row in data_qna.iterrows():
+            qna_id = row["id"]
+
+            final_data.append(
+                {
+                    "id": qna_id,
+                    "question": row["question"],
+                    "category": row["category"],
+                    "answer": row["answer"],
+                    "status": row["status"],
+                    "links": links_grouped.get(qna_id, []),
+                }
+            )
 
         total = pd.read_sql(
             "SELECT COUNT(*) as count FROM hesk_chatbot_qna",
@@ -35,7 +84,7 @@ def get_qna_data(page: int = 1, limit: int = 10):
         )
 
         return {
-            "data": data.to_dict(orient="records"),
+            "data": final_data,
             "total": int(total["count"][0]),
             "page": page,
             "limit": limit,
