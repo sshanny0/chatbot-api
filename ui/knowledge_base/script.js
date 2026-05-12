@@ -15,6 +15,11 @@ const newCategory = document.getElementById("newCategory");
 const newHyperlink = document.getElementById("newHyperlink");
 const newTag = document.getElementById("newTag");
 
+const linkList = document.getElementById("linkList");
+const addLinkBtn = document.getElementById("addLinkBtn");
+const hyperlinkError = document.getElementById("hyperlinkError");
+
+let links = [];
 let currentPage = 1;
 let limit = 10;
 let selectedRows = new Set();
@@ -126,7 +131,6 @@ function renderTable(data) {
 
     // Check if this row is selected
     const isSelected = selectedRows.has(row.id);
-    const hasLink = row.hyperlink && row.tag;
 
     tr.innerHTML = `
                         <td>
@@ -143,8 +147,16 @@ function renderTable(data) {
                         <td class="editable-cell" data-field="answer">
                             <p>${row.answer}
                             ${
-                              hasLink
-                                ? `<a href="${row.hyperlink}" target="_blank">${row.tag}</a>`
+                              row.links && row.links.length > 0
+                                ? row.links
+                                    .map(
+                                      (link) => `                                       
+                                          <a href="${link.hyperlink}" target="_blank">
+                                            ${link.tag || link.hyperlink}
+                                          </a>
+                                      `
+                                    )
+                                    .join("&nbsp;")
                                 : ""
                             }
                             </p>
@@ -275,9 +287,9 @@ function openModal(rowId = null) {
       newQuestion.value = row.question;
       newCategory.value = row.category;
       newAnswer.value = row.answer;
-      newHyperlink.value = row.hyperlink;
-      newTag.value = row.tag;
       newStatus.value = row.status;
+
+      links = row.links ? [...row.links] : [];
 
       checkInputs();
     }
@@ -286,7 +298,10 @@ function openModal(rowId = null) {
     isEditing = false;
     editingRowId = null;
     modalTitle.textContent = "Add New Row";
+
     addForm.reset();
+    links = [];
+    renderLinks();
   }
 
   addModal.style.display = "flex";
@@ -369,15 +384,21 @@ function isFormValid() {
     newAnswer.value.trim() !== "" &&
     newCategory.value.trim() !== "";
 
-  const isOptionalFilled =
-    newHyperlink.value.trim() !== "" &&
-    newTag.value.trim() !== "";
-
   if (isEditing) {
-    return isMainFilled && isOptionalFilled && editingRowId != null;
+    return isMainFilled && editingRowId != null;
   } else {
     return isMainFilled;
   }
+}
+
+// CHECK URL VALIDITY
+function isLinkValid(url) {
+    try {
+        new URL(url);
+        return true;
+    } catch (e) {
+        return false;
+    }
 }
 
 function checkInputs() {
@@ -387,8 +408,73 @@ function checkInputs() {
 newQuestion.addEventListener("input", checkInputs);
 newAnswer.addEventListener("input", checkInputs);
 newCategory.addEventListener("input", checkInputs);
-newHyperlink.addEventListener("input", checkInputs);
-newTag.addEventListener("input", checkInputs);
+
+addLinkBtn.addEventListener("click", () => {
+  let hyperlink = newHyperlink.value.trim();
+  const tag = newTag.value.trim();
+
+  hyperlinkError.textContent = "";
+
+  // PREFIX URL
+  if (
+    hyperlink &&
+    !hyperlink.startsWith("http://") &&
+    !hyperlink.startsWith("https://")
+  ) {
+    hyperlink = "https://" + hyperlink;
+  }
+
+  // CANNOT BLANK HYPERLINK
+  if (!hyperlink) {
+    hyperlinkError.textContent = "Hyperlink wajib diisi";
+    return;
+  }
+
+  // CHECK INPUT URL VALIDITY
+  if (!isLinkValid(hyperlink)) {
+    hyperlinkError.textContent = "Format URL tidak valid";
+    return;
+  }
+
+  links.push({ hyperlink, tag });
+  renderLinks();
+
+  newHyperlink.value = "";
+  newTag.value = "";
+});
+
+function renderLinks() {
+  linkList.innerHTML = "";
+
+  links.forEach((item, index) => {
+    const div = document.createElement("div");
+    div.className = "link-item";
+
+    div.innerHTML = `
+      <input 
+        value="${item.hyperlink}" 
+        onchange="updateLink(${index}, 'hyperlink', this.value)"
+      />
+      <input 
+        value="${item.tag}" 
+        onchange="updateLink(${index}, 'tag', this.value)"
+      />
+      <button onclick="removeLink(${index})">✕</button>
+    `;
+
+    linkList.appendChild(div);
+  });
+}
+
+function removeLink(index) {
+  links.splice(index, 1);
+  renderLinks();
+}
+
+// UPDATE HYPERLINK
+function updateLink(index, field, value) {
+  links[index][field] = value;
+}
 
 // LISTENER FOR SUBMIT, EDITING
 addForm.addEventListener("submit", async function (e) {
@@ -403,9 +489,8 @@ addForm.addEventListener("submit", async function (e) {
     question: newQuestion.value,
     category: newCategory.value,
     answer: newAnswer.value,
-    hyperlink: newHyperlink.value,
-    tag: newTag.value,
-    status: newStatus.value,s
+    links: links,
+    status: newStatus.value,
   };
 
   try {
@@ -432,6 +517,9 @@ addForm.addEventListener("submit", async function (e) {
       showToast("Data berhasil ditambahkan!", "success");
     }
 
+    links = [];
+    renderLinks();
+
     addModal.style.display = "none";
     addForm.reset();
     saveBtn.disabled = true;
@@ -441,6 +529,16 @@ addForm.addEventListener("submit", async function (e) {
 
     await loadData(currentPage);
   } catch (error) {
+    links = [];
+    renderLinks();
+
+    addModal.style.display = "none";
+    addForm.reset();
+    saveBtn.disabled = true;
+
+    isEditing = false;
+    editingRowId = null;
+    
     console.error("Error submitting form:", error);
     showToast("Proses gagal dilakukan!", "error");
   }

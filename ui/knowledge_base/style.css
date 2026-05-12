@@ -443,6 +443,91 @@ td:last-child {
   cursor: not-allowed;
 }
 
+/* HYPERLINKS CONTAINER */
+/* container list */
+#linkList {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  margin-bottom: 10px;
+}
+
+/* tiap item */
+.link-item {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+}
+
+/* hyperlink (truncate biar gak kepanjangan) */
+.link-item .link-text {
+  flex: 1;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  border: 1px solid #ddd;
+  padding: 6px;
+  border-radius: 6px;
+  background: #f9f9f9;
+}
+
+/* tag kecil */
+.link-item .tag {
+  min-width: 80px;
+  text-align: center;
+  background: #eee;
+  border-radius: 6px;
+  padding: 4px 6px;
+}
+
+/* tombol delete */
+.link-item button {
+  border: none;
+  background: red;
+  color: white;
+  border-radius: 6px;
+  padding: 4px 8px;
+  cursor: pointer;
+}
+
+/* input group */
+.link-input-group {
+  display: flex;
+  gap: 6px;
+}
+
+/* hyperlink lebih gede */
+.link-input-group input:first-child {
+  flex: 2;
+}
+
+/* tag lebih kecil */
+.link-input-group input:nth-child(2) {
+  flex: 1;
+}
+
+/* tombol add */
+.link-input-group button {
+  padding: 6px 10px;
+  border-radius: 6px;
+  border: none;
+  background: #007bff;
+  color: white;
+  cursor: pointer;
+}
+
+/* LINK VALIDATION */
+.link-input-wrapper {
+  width: 100%;
+}
+
+.input-error {
+  color: red;
+  font-size: 12px;
+  margin-top: 4px;
+  min-height: 16px;
+}
+
 /* TOAST NOTFICITATION */
 /* container toast */
 .toast-container {

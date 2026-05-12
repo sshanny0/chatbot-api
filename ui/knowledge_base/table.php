@@ -3,7 +3,7 @@
 <link rel="stylesheet" href="style.css">
 <div class="container">
     <div class="header">
-        <h1><i class="fas fa-table"></i> Editable Data Table</h1>
+        <h1><i class="fas fa-table"></i> QnA Management</h1>
         <p>Add, edit, delete, and search table entries with real-time updates</p>
     </div>
 
@@ -77,10 +77,17 @@
             <textarea id="newAnswer" required></textarea>
 
             <label>Hyperlink</label>
-            <input type="text" id="newHyperlink" />
+            <div id="linkList"></div>
+            <div class="link-input-wrapper">
+            <div class="link-input-group">
+                <input type="text" id="newHyperlink" placeholder="https://..." />
 
-            <label>Tag</label>
-            <input type="text" id="newTag" />
+                <input type="text" id="newTag" placeholder="tag" />
+
+                <button type="button" id="addLinkBtn">+ Add</button>
+            </div>
+            <div id="hyperlinkError" class="input-error"></div>
+            </div>
 
             <label>Status</label>
             <select id="newStatus">
